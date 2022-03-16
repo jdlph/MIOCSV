@@ -84,6 +84,7 @@ public:
 private:
     void read_headers();
 
+    // support double quotes
     void split(std::string& s)
     {
         auto* r = new Row();
@@ -102,18 +103,18 @@ private:
                     // use b = ++i?
                     b = i + 1;
                 }
-                else if (*i == delim && !quoted)
+            }
+            else if (*i == delim && !quoted)
+            {
+                if (i > b)
                 {
-                    if (i > b)
-                    {
-                        str2 = std::string(b, i);
-                        r->append(str2);
-                    }
-                    else
-                        r->append(str1);
-
-                    b = i + 1;
+                    str2 = std::string(b, i);
+                    r->append(str2);
                 }
+                else
+                    r->append(str1);
+
+                b = i + 1;
             }
         }
 
