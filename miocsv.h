@@ -34,7 +34,7 @@ public:
     Row& operator=(const Row&) = delete;
     
     Row(Row&&) = default;
-    Row& operator=(Row&&) = delete;
+    Row& operator=(Row&&) = default;
 
     ~Row()=default;
 
@@ -78,9 +78,9 @@ private:
 
 class Reader {
 public:
-    class iterator;
-    using const_iterator = const iterator;
-
+    // class iterator;
+    using iterator = Row*;
+    using const_iterator = const Row*;
     using size_type = unsigned long;
     
     Reader() = delete;
@@ -102,17 +102,34 @@ public:
     
     iterator end();
     const_iterator end() const;
+    
+    iterator& operator++()
+    {
+        std::string s;
+        std::getline(f, s);
+        *iter = split(s);
 
-    Row split_n(std::string&) const;
+        return iter;
+    }
+
+    bool operator==(const iterator& it) const
+    {
+        return iter == it;
+    }
+
+    bool operator!=(const iterator& it) const
+    {
+        return iter != it;
+    }
 
 private:
     void read_headers();
 
     // support double quotes
-    void split(std::string& s)
+    Row split(std::string& s) const
     {
-        auto* r = new Row();
-        std::string str1, str2;
+        Row r = nullptr;
+        std::string s1, s2;
         
         bool quoted = false;
         auto b = s.begin();
@@ -123,7 +140,7 @@ private:
                 quoted = quoted ? false : true;
                 if (!quoted)
                 {
-                    str1 += std::string(b, i);
+                    s1 += std::string(b, i);
                     // use b = ++i?
                     b = i + 1;
                 }
@@ -132,13 +149,13 @@ private:
             {
                 if (i > b)
                 {
-                    str2 = std::string(b, i);
-                    r->append(str2);
+                    s2 = std::string(b, i);
+                    r.append(s2);
                 }
                 else
                 {
-                    r->append(str1);
-                    str1.clear();
+                    r.append(s1);
+                    s1.clear();
                 }
 
                 b = i + 1;
@@ -146,104 +163,25 @@ private:
         }
 
         // last one
-        if (!str1.empty())
-            r->append(str1);
+        if (!s1.empty())
+            r.append(s1);
         else
         {
-            str2 = std::string(b, s.end());
-            r->append(str2);
+            s2 = std::string(b, s.end());
+            r.append(s2);
         }
+
+        // use move constructor to avoid copy
+        return r;
     }
-    
+
     const char quote = ';';
     const char delim;
+    Row* iter;
     std::string fname;
     std::ifstream f;
     std::map<std::string, size_type> fieldnames;
 };
-
-class Reader::iterator {
-public:
-    // iterator() : r {nullptr}
-    // {
-    // }
-
-    iterator(std::ifstream& is_) : r {nullptr}, is {is_}
-    {
-    }
-    
-    iterator& operator++()
-    {
-        std::string s;
-        std::getline(is, s);
-        *r = split_n(s);
-
-        return *this;
-    }
-
-    bool operator==(const iterator& it) const
-    {
-        return r == it.r;
-    }
-
-    bool operator!=(const iterator& it) const
-    {
-        return r != it.r;
-    }
-
-private:
-    Row *r;
-    std::ifstream& is;
-};
-
-Row Reader::split_n(std::string& s) const
-{
-    Row r;
-    std::string s1, s2;
-    
-    bool quoted = false;
-    auto b = s.begin();
-    for (auto i = s.begin(), e = s.end(); i != e; ++i)
-    {
-        if (*i = quote)
-        {
-            quoted = quoted ? false : true;
-            if (!quoted)
-            {
-                s1 += std::string(b, i);
-                // use b = ++i?
-                b = i + 1;
-            }
-        }
-        else if (*i == delim && !quoted)
-        {
-            if (i > b)
-            {
-                s2 = std::string(b, i);
-                r.append(s2);
-            }
-            else
-            {
-                r.append(s1);
-                s1.clear();
-            }
-
-            b = i + 1;
-        }
-    }
-
-    // last one
-    if (!s1.empty())
-        r.append(s1);
-    else
-    {
-        s2 = std::string(b, s.end());
-        r.append(s2);
-    }
-
-    // use move constructor to avoid copy
-    return r;
-}
 
 class Writer {
 
