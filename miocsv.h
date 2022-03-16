@@ -13,6 +13,8 @@ namespace miocsv
 class Row {
 public:
     using size_type = unsigned long;
+    using iterator = std::vector<std::string>::iterator;
+    using const_iterator = std::vector<std::string>::const_iterator;
     
     Row()=default;
     // Row()=delete;
@@ -48,6 +50,31 @@ public:
         return record[i];
     }
 
+    iterator begin() 
+    {
+        return record.begin();
+    }
+
+    const_iterator begin() const
+    {
+        return record.begin();
+    }
+
+    iterator end() 
+    {
+        return record.end();
+    }
+
+    const_iterator end() const
+    {
+        return record.end();
+    }
+
+    size_type size() const
+    {
+        return record.size();
+    }
+
     void append(std::string& str)
     {
         record.emplace_back(str);
@@ -59,10 +86,7 @@ private:
     {
         std::ostringstream os;
         os << t;
-        
-        // is it proper to use move() here?
-        // std::string str = std::move(os.str());
-        // record.emplace_back(str);
+        // os.str() will be moved into record as os.str() is a rvalue reference
         record.push_back(os.str());
     }
 
@@ -85,30 +109,49 @@ public:
     
     Reader() = delete;
 
-    Reader(const std::string& fname_, const char delim_ = ',') 
-        : fname {fname_}, delim {delim_}, f {fname}
+    Reader(const std::string& fname_, bool hasheaders_ = true, const char delim_ = ',') 
+        : fname {fname_}, delim {delim_}, f {fname}, iter {nullptr}, row_num {0}, hasheaders {hasheaders_}
     {
+        if (hasheaders)
+            read_headers();
+        else
+            next();
     }
 
-    Reader(const std::string&& fname_, const char delim_ = ',') 
-        : fname {fname_}, delim {delim_}, f {fname}
+    Reader(const std::string&& fname_, bool hasheaders_ = true, const char delim_ = ',') 
+        : fname {fname_}, delim {delim_}, f {fname}, iter {nullptr}, row_num {0}, hasheaders {hasheaders_}
     {
+        if (hasheaders)
+            read_headers();
+        else
+            next();
     }
 
     ~Reader() = default;
 
-    iterator begin();
-    const_iterator begin() const;
+    iterator begin()
+    {
+        return iter;
+    }
+
+    const_iterator begin() const
+    {
+        return iter;
+    }
     
-    iterator end();
-    const_iterator end() const;
+    iterator end()
+    {
+        return nullptr;
+    }
+
+    const_iterator end() const
+    {
+        return nullptr;
+    }
     
     iterator& operator++()
     {
-        std::string s;
-        std::getline(f, s);
-        *iter = split(s);
-
+        next();
         return iter;
     }
 
@@ -123,7 +166,29 @@ public:
     }
 
 private:
-    void read_headers();
+    void read_headers()
+    {
+        if (fieldnames.empty())
+        {
+            next();
+            // empty string at 1st line, i.e., no headers at all
+
+            // non-empty
+            for (size_type i = 0, sz = iter->size(); i != iter->size(); ++i)
+            {
+                std::string s = (*iter)[i];
+                fieldnames[s] = i;
+            }
+        }
+    }
+
+    void next()
+    {
+        std::string s;
+        std::getline(f, s);
+        *iter = split(s);
+        ++row_num;
+    }
 
     // support double quotes
     Row split(std::string& s) const
@@ -177,10 +242,12 @@ private:
 
     const char quote = ';';
     const char delim;
+    bool hasheaders;
     Row* iter;
     std::string fname;
     std::ifstream f;
     std::map<std::string, size_type> fieldnames;
+    size_type row_num;
 };
 
 class Writer {
