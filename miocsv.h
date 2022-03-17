@@ -16,8 +16,7 @@ public:
     using iterator = std::vector<std::string>::iterator;
     using const_iterator = std::vector<std::string>::const_iterator;
     
-    Row()=default;
-    // Row()=delete;
+    Row() = delete;
 
     // pure string input
     Row(std::initializer_list<std::string> args)
@@ -38,7 +37,7 @@ public:
     Row(Row&&) = default;
     Row& operator=(Row&&) = default;
 
-    ~Row()=default;
+    ~Row() = default;
 
     std::string& operator[](size_type i)
     {
@@ -109,20 +108,12 @@ public:
     
     Reader() = delete;
 
-    Reader(const std::string& fname_, bool hasheaders_ = true, const char delim_ = ',') 
-        : fname {fname_}, delim {delim_}, f {fname}, iter {nullptr}, row_num {0}, hasheaders {hasheaders_}
+    Reader(std::ifstream& is_, bool hasheaders_ = true, const char delim_ = ',') 
+        : is {is_}, hasheaders {hasheaders_}, delim {delim_}, 
+          quote {';'}, row_num {0}, iter {nullptr}
     {
         if (hasheaders)
-            read_headers();
-        else
-            next();
-    }
-
-    Reader(const std::string&& fname_, bool hasheaders_ = true, const char delim_ = ',') 
-        : fname {fname_}, delim {delim_}, f {fname}, iter {nullptr}, row_num {0}, hasheaders {hasheaders_}
-    {
-        if (hasheaders)
-            read_headers();
+            setup_headers();
         else
             next();
     }
@@ -165,15 +156,29 @@ public:
         return iter != it;
     }
 
-private:
-    void read_headers()
+    void setup_headers(std::initializer_list<std::string> args)
     {
-        if (fieldnames.empty())
+        if (args.size() == 0)
+            throw std::string {"emtpy headers!"};
+
+        // non-empty
+        if (!fieldnames.empty())
+            fieldnames.clear();
+
+        for (size_type i = 0, sz = args.size(); i != sz; ++i)
+        {
+            std::string s = (*iter)[i];
+            fieldnames[s] = i;
+        }
+    }
+
+private:
+    void setup_headers()
+    {
+        if (fieldnames.empty() && row_num == 0)
         {
             next();
-            // empty string at 1st line, i.e., no headers at all
 
-            // non-empty
             for (size_type i = 0, sz = iter->size(); i != iter->size(); ++i)
             {
                 std::string s = (*iter)[i];
@@ -185,7 +190,7 @@ private:
     void next()
     {
         std::string s;
-        std::getline(f, s);
+        std::getline(is, s);
         *iter = split(s);
         ++row_num;
     }
@@ -240,14 +245,13 @@ private:
         return r;
     }
 
-    const char quote = ';';
-    const char delim;
+    std::ifstream& is;
     bool hasheaders;
-    Row* iter;
-    std::string fname;
-    std::ifstream f;
-    std::map<std::string, size_type> fieldnames;
+    const char delim;
+    const char quote;
     size_type row_num;
+    Row* iter;
+    std::map<std::string, size_type> fieldnames;
 };
 
 class Writer {
