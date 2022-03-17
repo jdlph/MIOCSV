@@ -2,6 +2,7 @@
 #define GUARD_MIOCSV_H
 
 #include <fstream>
+#include <iostream>
 #include <map>
 #include <sstream>
 #include <string>
@@ -16,7 +17,7 @@ public:
     using iterator = std::vector<std::string>::iterator;
     using const_iterator = std::vector<std::string>::const_iterator;
 
-    Row() = delete;
+    Row() = default;
 
     // pure string input
     Row(std::initializer_list<std::string> args)
@@ -29,6 +30,10 @@ public:
     Row(const T& t, const Args&... args)
     {
         convert_to_string(t, args);
+    }
+
+    Row(std::map<std::string, size_type>* fieldnames_) : fieldnames {fieldnames_}
+    {
     }
 
     Row(const Row&) = delete;
@@ -51,12 +56,36 @@ public:
 
     std::string& operator[](std::string& s)
     {
-        return record[i];
+        try
+        {
+            size_type i = fieldnames->at(s);
+            return record[i];
+        }
+        catch(const std::out_of_range)
+        {
+            throw std::string {s + " is not existing!"};
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+        }
     }
 
     const std::string& operator[](std::string& s) const
     {
-        return record[i];
+        try
+        {
+            size_type i = fieldnames->at(s);
+            return record[i];
+        }
+        catch(const std::out_of_range)
+        {
+            throw std::string {s + " is not existing!"};
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+        }
     }
 
     iterator begin()
@@ -107,6 +136,7 @@ private:
     }
 
     std::vector<std::string> record;
+    std::map<std::string, size_type>* fieldnames = nullptr;
 };
 
 class Reader {
@@ -125,7 +155,7 @@ public:
         if (hasheaders)
             setup_headers();
         else
-            next();
+            iterate();
     }
 
     Reader(const Reader&) = delete;
@@ -158,7 +188,7 @@ public:
 
     iterator& operator++()
     {
-        next();
+        iterate();
         return iter;
     }
 
@@ -193,8 +223,8 @@ private:
     {
         if (fieldnames.empty() && row_num == 0)
         {
-            next();
-            for (size_type i = 0, sz = iter->size(); i != iter->size(); ++i)
+            iterate();
+            for (size_type i = 0, sz = iter->size(); i != sz; ++i)
             {
                 std::string s = (*iter)[i];
                 fieldnames[s] = i;
@@ -202,12 +232,10 @@ private:
         }
     }
 
-    void next()
+    void iterate()
     {
         std::string s;
-        // do not take blank record
-        while (s.empty())
-            std::getline(is, s);
+        std::getline(is, s);
         *iter = split(s);
         ++row_num;
     }
@@ -215,7 +243,10 @@ private:
     // support double quotes
     Row split(std::string& s) const
     {
-        Row r = nullptr;
+        if (s.empty())
+            return nullptr;
+        
+        Row r;
         std::string s1, s2;
 
         bool quoted = false;
