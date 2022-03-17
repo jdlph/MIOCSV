@@ -15,7 +15,7 @@ public:
     using size_type = unsigned long;
     using iterator = std::vector<std::string>::iterator;
     using const_iterator = std::vector<std::string>::const_iterator;
-    
+
     Row() = delete;
 
     // pure string input
@@ -24,7 +24,7 @@ public:
         for (auto& s: args)
             record.emplace_back(s);
     }
-    
+
     template<typename T, typename... Args>
     Row(const T& t, const Args&... args)
     {
@@ -33,7 +33,7 @@ public:
 
     Row(const Row&) = delete;
     Row& operator=(const Row&) = delete;
-    
+
     Row(Row&&) = default;
     Row& operator=(Row&&) = default;
 
@@ -43,13 +43,23 @@ public:
     {
         return record[i];
     }
-    
-    const std::string& operator[](size_type i) const 
+
+    const std::string& operator[](size_type i) const
     {
         return record[i];
     }
 
-    iterator begin() 
+    std::string& operator[](std::string& s)
+    {
+        return record[i];
+    }
+
+    const std::string& operator[](std::string& s) const
+    {
+        return record[i];
+    }
+
+    iterator begin()
     {
         return record.begin();
     }
@@ -59,7 +69,7 @@ public:
         return record.begin();
     }
 
-    iterator end() 
+    iterator end()
     {
         return record.end();
     }
@@ -95,7 +105,7 @@ private:
         convert_to_string(t);
         convert_to_string(args...);
     }
-    
+
     std::vector<std::string> record;
 };
 
@@ -105,11 +115,11 @@ public:
     using iterator = Row*;
     using const_iterator = const Row*;
     using size_type = unsigned long;
-    
+
     Reader() = delete;
 
-    Reader(std::ifstream& is_, bool hasheaders_ = true, const char delim_ = ',') 
-        : is {is_}, hasheaders {hasheaders_}, delim {delim_}, 
+    Reader(std::ifstream& is_, bool hasheaders_ = true, const char delim_ = ',')
+        : is {is_}, hasheaders {hasheaders_}, delim {delim_},
           quote {';'}, row_num {0}, iter {nullptr}
     {
         if (hasheaders)
@@ -117,6 +127,12 @@ public:
         else
             next();
     }
+
+    Reader(const Reader&) = delete;
+    Reader& operator=(const Reader&) = delete;
+
+    Reader(Reader&&) = delete;
+    Reader& operator=(Reader&&) = delete;
 
     ~Reader() = default;
 
@@ -129,7 +145,7 @@ public:
     {
         return iter;
     }
-    
+
     iterator end()
     {
         return nullptr;
@@ -139,7 +155,7 @@ public:
     {
         return nullptr;
     }
-    
+
     iterator& operator++()
     {
         next();
@@ -178,7 +194,6 @@ private:
         if (fieldnames.empty() && row_num == 0)
         {
             next();
-
             for (size_type i = 0, sz = iter->size(); i != iter->size(); ++i)
             {
                 std::string s = (*iter)[i];
@@ -190,7 +205,9 @@ private:
     void next()
     {
         std::string s;
-        std::getline(is, s);
+        // do not take blank record
+        while (s.empty())
+            std::getline(is, s);
         *iter = split(s);
         ++row_num;
     }
@@ -200,7 +217,7 @@ private:
     {
         Row r = nullptr;
         std::string s1, s2;
-        
+
         bool quoted = false;
         auto b = s.begin();
         for (auto i = s.begin(), e = s.end(); i != e; ++i)
@@ -250,7 +267,7 @@ private:
     const char delim;
     const char quote;
     size_type row_num;
-    Row* iter;
+    iterator iter;
     std::map<std::string, size_type> fieldnames;
 };
 
