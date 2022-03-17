@@ -6,7 +6,7 @@ A fast CSV reader requires two efficient operations.
 1. iterate over and retrieve each line from the CSV file;
 2. parse a line into a set of strings (fields).
 
-We choose [mio::StringReader::getline()](https://github.com/wxinix/MIO/blob/master/include/mio/stringreader.hpp) to perform operation 1, which is way faster than std::getline(). Thanks to Dr. Wuping Xin for this master piece. As it relies on C++17, std::getline() from the C++ standard library is still embedded as an alternative implementation towards more flexibility.
+We choose [mio::StringReader.getline()](https://github.com/wxinix/MIO/blob/master/include/mio/stringreader.hpp) to perform operation 1, which is way faster than std::getline(). Thanks to Dr. Wuping Xin for this master piece. As it relies on C++17, std::getline() from the C++ standard library is still embedded as an alternative implementation towards more flexibility.
 
 The string split method is adopted from [CSVparser](https://github.com/rsylvian/CSVparser) with enhancement to support double quotes. Thanks to its original author for this elegant procedure!
 

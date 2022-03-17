@@ -113,6 +113,11 @@ public:
         return record.size();
     }
 
+    bool empty() const
+    {
+        return record.size() != 0;
+    }
+
     void append(std::string& str)
     {
         record.emplace_back(str);
@@ -146,16 +151,12 @@ public:
     using const_iterator = const Row*;
     using size_type = unsigned long;
 
-    Reader() = delete;
+    Reader() = default;
 
-    Reader(std::ifstream& is_, bool hasheaders_ = true, const char delim_ = ',')
-        : is {is_}, hasheaders {hasheaders_}, delim {delim_},
-          quote {';'}, row_num {0}, iter {nullptr}
+    Reader(std::ifstream& is_, const char delim_ = ',')
+        : is {is_}, delim {delim_}, quote {';'}, row_num {0}, iter {nullptr}
     {
-        if (hasheaders)
-            setup_headers();
-        else
-            iterate();
+        iterate();
     }
 
     Reader(const Reader&) = delete;
@@ -202,36 +203,7 @@ public:
         return iter != it;
     }
 
-    void setup_headers(std::initializer_list<std::string> args)
-    {
-        if (args.size() == 0)
-            throw std::string {"emtpy headers!"};
-
-        // non-empty
-        if (!fieldnames.empty())
-            fieldnames.clear();
-
-        for (size_type i = 0, sz = args.size(); i != sz; ++i)
-        {
-            std::string s = (*iter)[i];
-            fieldnames[s] = i;
-        }
-    }
-
-private:
-    void setup_headers()
-    {
-        if (fieldnames.empty() && row_num == 0)
-        {
-            iterate();
-            for (size_type i = 0, sz = iter->size(); i != sz; ++i)
-            {
-                std::string s = (*iter)[i];
-                fieldnames[s] = i;
-            }
-        }
-    }
-
+protected:
     void iterate()
     {
         std::string s;
@@ -240,6 +212,7 @@ private:
         ++row_num;
     }
 
+private:
     // support double quotes
     Row split(std::string& s) const
     {
@@ -294,12 +267,128 @@ private:
     }
 
     std::ifstream& is;
-    bool hasheaders;
+    const char delim;
+    const char quote;
+    size_type row_num;
+    iterator iter;
+};
+
+class DictReader : public Reader {
+public:
+    DictReader() = delete;
+    
+    DictReader(std::ifstream& is_, const Row& fieldnames_ = {}, const char delim_ = ',')
+        : is {is_}, delim {delim_}, quote {';'}, row_num {0}, iter {nullptr}
+    {
+        if (!fieldnames_.empty())
+            setup_headers(fieldnames_);
+        else
+            setup_headers();
+    }
+
+    // can be removed as void setup_headers(const Row& r) is general
+    void setup_headers(std::initializer_list<std::string> args)
+    {
+        if (args.size() == 0)
+            throw std::string {"emtpy headers!"};
+
+        // non-empty
+        if (!fieldnames.empty())
+            fieldnames.clear();
+
+        for (size_type i = 0, sz = args.size(); i != sz; ++i)
+        {
+            std::string s = (*iter)[i];
+            fieldnames[s] = i;
+        }
+    }
+
+private:
+    std::ifstream& is;
     const char delim;
     const char quote;
     size_type row_num;
     iterator iter;
     std::map<std::string, size_type> fieldnames;
+    
+    void setup_headers()
+    {
+        if (fieldnames.empty() && row_num == 0)
+        {
+            iterate();
+            for (size_type i = 0, sz = iter->size(); i != sz; ++i)
+            {
+                std::string s = (*iter)[i];
+                fieldnames[s] = i;
+            }
+        }
+    }
+
+    void setup_headers(const Row& r)
+    {
+        if (fieldnames.empty() && row_num == 0)
+        {
+            iterate();
+            for (size_type i = 0, sz = r.size(); i != sz; ++i)
+            {
+                std::string s = r[i];
+                fieldnames[s] = i;
+            }
+        }
+    }
+
+    // support double quotes
+    Row split(std::string& s) const
+    {
+        if (s.empty())
+            return nullptr;
+        
+        Row r(&fieldnames);
+        std::string s1, s2;
+
+        bool quoted = false;
+        auto b = s.begin();
+        for (auto i = s.begin(), e = s.end(); i != e; ++i)
+        {
+            if (*i = quote)
+            {
+                quoted = quoted ? false : true;
+                if (!quoted)
+                {
+                    s1 += std::string(b, i);
+                    // use b = ++i?
+                    b = i + 1;
+                }
+            }
+            else if (*i == delim && !quoted)
+            {
+                if (i > b)
+                {
+                    s2 = std::string(b, i);
+                    r.append(s2);
+                }
+                else
+                {
+                    r.append(s1);
+                    s1.clear();
+                }
+
+                b = i + 1;
+            }
+        }
+
+        // last one
+        if (!s1.empty())
+            r.append(s1);
+        else
+        {
+            s2 = std::string(b, s.end());
+            r.append(s2);
+        }
+
+        // use move constructor to avoid copy
+        return r;
+    }
 };
 
 class Writer {
