@@ -32,10 +32,6 @@ public:
         convert_to_string(t, args);
     }
 
-    Row(std::map<std::string, size_type>* fieldnames_) : fieldnames {fieldnames_}
-    {
-    }
-
     Row(const Row&) = delete;
     Row& operator=(const Row&) = delete;
 
@@ -140,8 +136,13 @@ private:
         convert_to_string(args...);
     }
 
+    friend void attach_fieldnames(Row& r, const std::map<std::string, size_type>* fieldnames_)
+    {
+        r.fieldnames = fieldnames_;
+    }
+
     std::vector<std::string> record;
-    std::map<std::string, size_type>* fieldnames = nullptr;
+    const std::map<std::string, size_type>* fieldnames = nullptr;
 };
 
 class Reader {
@@ -167,6 +168,23 @@ public:
 
     ~Reader() = default;
 
+    iterator& operator++()
+    {
+        iterate();
+        return iter;
+    }
+
+    bool operator==(const iterator& it) const
+    {
+        return iter == it;
+    }
+
+    bool operator!=(const iterator& it) const
+    {
+        return iter != it;
+    }
+
+protected:
     iterator begin()
     {
         return iter;
@@ -187,32 +205,6 @@ public:
         return nullptr;
     }
 
-    iterator& operator++()
-    {
-        iterate();
-        return iter;
-    }
-
-    bool operator==(const iterator& it) const
-    {
-        return iter == it;
-    }
-
-    bool operator!=(const iterator& it) const
-    {
-        return iter != it;
-    }
-
-protected:
-    void iterate()
-    {
-        std::string s;
-        std::getline(is, s);
-        *iter = split(s);
-        ++row_num;
-    }
-
-private:
     // support double quotes
     Row split(std::string& s) const
     {
@@ -264,6 +256,15 @@ private:
 
         // use move constructor to avoid copy
         return r;
+    }
+
+private:
+    void iterate()
+    {
+        std::string s;
+        std::getline(is, s);
+        *iter = split(s);
+        ++row_num;
     }
 
     std::ifstream& is;
@@ -337,57 +338,13 @@ private:
         }
     }
 
-    // support double quotes
-    Row split(std::string& s) const
+    void iterate()
     {
-        if (s.empty())
-            return nullptr;
-        
-        Row r(&fieldnames);
-        std::string s1, s2;
-
-        bool quoted = false;
-        auto b = s.begin();
-        for (auto i = s.begin(), e = s.end(); i != e; ++i)
-        {
-            if (*i = quote)
-            {
-                quoted = quoted ? false : true;
-                if (!quoted)
-                {
-                    s1 += std::string(b, i);
-                    // use b = ++i?
-                    b = i + 1;
-                }
-            }
-            else if (*i == delim && !quoted)
-            {
-                if (i > b)
-                {
-                    s2 = std::string(b, i);
-                    r.append(s2);
-                }
-                else
-                {
-                    r.append(s1);
-                    s1.clear();
-                }
-
-                b = i + 1;
-            }
-        }
-
-        // last one
-        if (!s1.empty())
-            r.append(s1);
-        else
-        {
-            s2 = std::string(b, s.end());
-            r.append(s2);
-        }
-
-        // use move constructor to avoid copy
-        return r;
+        std::string s;
+        std::getline(is, s);
+        *iter = split(s);
+        attach_fieldnames(*iter, &fieldnames);
+        ++row_num;
     }
 };
 
