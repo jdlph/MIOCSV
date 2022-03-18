@@ -53,6 +53,7 @@ public:
         return record[i];
     }
 
+    // use std::runtime_error?
     std::string& operator[](std::string& s)
     {
         try
@@ -146,18 +147,19 @@ private:
     }
 
     Record record;
+    // reserved for DictReader
     const FieldNames* fieldnames = nullptr;
 };
 
 class Reader {
 public:
-    using iterator = Row*;
-    using const_iterator = const Row*;
+    using iterator = Reader;
+    using const_iterator = const Reader;
 
     Reader() = delete;
 
     Reader(std::ifstream& is_, const char delim_ = ',')
-        : is {is_}, delim {delim_}, quote {';'}, row_num {0}, iter {nullptr}
+        : is {is_}, delim {delim_}, quote {';'}, row_num {0}
     {
         iterate();
     }
@@ -170,41 +172,44 @@ public:
 
     ~Reader() = default;
 
-    iterator& operator++()
+protected:
+    std::ifstream& is;
+    const char delim;
+    const char quote;
+    size_type row_num;
+    Row row;
+    
+    const iterator& operator++()
     {
-        iterate();
-        return iter;
+        if (iterate())
+            return *this;
+        else 
+            return *end_iter; 
+    }
+
+    Row& operator*()
+    {
+        return row;
     }
 
     bool operator==(const iterator& it) const
     {
-        return iter == it;
+        return *this == it;
     }
 
     bool operator!=(const iterator& it) const
     {
-        return iter != it;
+        return *this != it;
+    }
+    
+    const_iterator& begin() const
+    {
+        return *this;
     }
 
-protected:
-    iterator begin()
+    const_iterator& end() const
     {
-        return iter;
-    }
-
-    const_iterator begin() const
-    {
-        return iter;
-    }
-
-    iterator end()
-    {
-        return nullptr;
-    }
-
-    const_iterator end() const
-    {
-        return nullptr;
+        return *end_iter;
     }
 
     // support double quotes
@@ -261,20 +266,20 @@ protected:
     }
 
 private:
-    void iterate()
+    const Reader* end_iter = nullptr;
+
+    bool iterate()
     {
         std::string s;
-        std::getline(is, s);
-        *iter = split(s);
-        ++row_num;
-    }
+        if (std::getline(is, s))
+        {
+            row = split(s);
+            ++row_num;
+            return true;
+        }
 
-protected:
-    std::ifstream& is;
-    const char delim;
-    const char quote;
-    size_type row_num;
-    iterator iter;
+        return false;
+    }
 };
 
 class DictReader : public Reader {
@@ -288,10 +293,24 @@ public:
 private:
     FieldNames fieldnames;
 
+    bool iterate()
+    {
+        std::string s;
+        if (std::getline(is, s))
+        {
+            row = split(s);
+            attach_fieldnames(row, &fieldnames);
+            ++row_num;
+            return true;
+        }
+
+        return false;
+    }
+
     // use std::initializer_list<std::string> as headers can only be strings?
     void setup_headers(const Row& r)
     {
-        if (fieldnames.empty() && row_num == 0)
+        if (fieldnames.empty())
         {
             iterate();
             for (size_type i = 0, sz = r.size(); i != sz; ++i)
@@ -300,15 +319,6 @@ private:
                 fieldnames[s] = i;
             }
         }
-    }
-
-    void iterate()
-    {
-        std::string s;
-        std::getline(is, s);
-        *iter = split(s);
-        attach_fieldnames(*iter, &fieldnames);
-        ++row_num;
     }
 };
 
