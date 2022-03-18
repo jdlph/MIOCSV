@@ -29,7 +29,7 @@ public:
     template<typename T, typename... Args>
     Row(const T& t, const Args&... args)
     {
-        convert_to_string(t, args);
+        convert_to_string(t, args...);
     }
 
     Row(const Row&) = delete;
@@ -152,7 +152,7 @@ public:
     using const_iterator = const Row*;
     using size_type = unsigned long;
 
-    Reader() = default;
+    Reader() = delete;
 
     Reader(std::ifstream& is_, const char delim_ = ',')
         : is {is_}, delim {delim_}, quote {';'}, row_num {0}, iter {nullptr}
@@ -218,7 +218,7 @@ protected:
         auto b = s.begin();
         for (auto i = s.begin(), e = s.end(); i != e; ++i)
         {
-            if (*i = quote)
+            if (*i == quote)
             {
                 quoted = quoted ? false : true;
                 if (!quoted)
@@ -267,6 +267,7 @@ private:
         ++row_num;
     }
 
+protected:
     std::ifstream& is;
     const char delim;
     const char quote;
@@ -279,52 +280,15 @@ public:
     DictReader() = delete;
     
     DictReader(std::ifstream& is_, const Row& fieldnames_ = {}, const char delim_ = ',')
-        : is {is_}, delim {delim_}, quote {';'}, row_num {0}, iter {nullptr}
+        : Reader{is_, delim_}
     {
-        if (!fieldnames_.empty())
-            setup_headers(fieldnames_);
-        else
-            setup_headers();
-    }
-
-    // can be removed as void setup_headers(const Row& r) is general
-    void setup_headers(std::initializer_list<std::string> args)
-    {
-        if (args.size() == 0)
-            throw std::string {"emtpy headers!"};
-
-        // non-empty
-        if (!fieldnames.empty())
-            fieldnames.clear();
-
-        for (size_type i = 0, sz = args.size(); i != sz; ++i)
-        {
-            std::string s = (*iter)[i];
-            fieldnames[s] = i;
-        }
+        setup_headers(fieldnames_);
     }
 
 private:
-    std::ifstream& is;
-    const char delim;
-    const char quote;
-    size_type row_num;
-    iterator iter;
     std::map<std::string, size_type> fieldnames;
-    
-    void setup_headers()
-    {
-        if (fieldnames.empty() && row_num == 0)
-        {
-            iterate();
-            for (size_type i = 0, sz = iter->size(); i != sz; ++i)
-            {
-                std::string s = (*iter)[i];
-                fieldnames[s] = i;
-            }
-        }
-    }
 
+    // use std::initializer_list<std::string> as headers can only be strings?
     void setup_headers(const Row& r)
     {
         if (fieldnames.empty() && row_num == 0)
