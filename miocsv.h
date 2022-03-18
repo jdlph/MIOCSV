@@ -11,11 +11,14 @@
 namespace miocsv
 {
 
+using size_type = unsigned long;
+using FieldNames = std::map<std::string, size_type>;
+
 class Row {
 public:
-    using size_type = unsigned long;
-    using iterator = std::vector<std::string>::iterator;
-    using const_iterator = std::vector<std::string>::const_iterator;
+    using Record = std::vector<std::string>;
+    using iterator = Record::iterator;
+    using const_iterator = Record::const_iterator;
 
     Row() = default;
 
@@ -111,12 +114,13 @@ public:
 
     bool empty() const
     {
-        return record.size() != 0;
+        return record.size() == 0;
     }
 
-    void append(std::string& str)
+    // provide an overloaded form to take rvalue reference?
+    void append(std::string& s)
     {
-        record.emplace_back(str);
+        record.emplace_back(s);
     }
 
 private:
@@ -136,21 +140,19 @@ private:
         convert_to_string(args...);
     }
 
-    friend void attach_fieldnames(Row& r, const std::map<std::string, size_type>* fieldnames_)
+    friend void attach_fieldnames(Row& r, const FieldNames* fieldnames_)
     {
         r.fieldnames = fieldnames_;
     }
 
-    std::vector<std::string> record;
-    const std::map<std::string, size_type>* fieldnames = nullptr;
+    Record record;
+    const FieldNames* fieldnames = nullptr;
 };
 
 class Reader {
 public:
-    // class iterator;
     using iterator = Row*;
     using const_iterator = const Row*;
-    using size_type = unsigned long;
 
     Reader() = delete;
 
@@ -210,7 +212,7 @@ protected:
     {
         if (s.empty())
             return nullptr;
-        
+
         Row r;
         std::string s1, s2;
 
@@ -277,8 +279,6 @@ protected:
 
 class DictReader : public Reader {
 public:
-    DictReader() = delete;
-    
     DictReader(std::ifstream& is_, const Row& fieldnames_ = {}, const char delim_ = ',')
         : Reader{is_, delim_}
     {
@@ -286,7 +286,7 @@ public:
     }
 
 private:
-    std::map<std::string, size_type> fieldnames;
+    FieldNames fieldnames;
 
     // use std::initializer_list<std::string> as headers can only be strings?
     void setup_headers(const Row& r)
@@ -296,7 +296,7 @@ private:
             iterate();
             for (size_type i = 0, sz = r.size(); i != sz; ++i)
             {
-                std::string s = r[i];
+                const auto& s = r[i];
                 fieldnames[s] = i;
             }
         }
