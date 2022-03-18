@@ -125,6 +125,10 @@ public:
     }
 
 private:
+    Record record;
+    // reserved for DictReader
+    const FieldNames* fieldnames = nullptr;
+    
     template<typename T>
     void convert_to_string(const T& t)
     {
@@ -145,15 +149,10 @@ private:
     {
         r.fieldnames = fieldnames_;
     }
-
-    Record record;
-    // reserved for DictReader
-    const FieldNames* fieldnames = nullptr;
 };
 
 class Reader {
 public:
-    using iterator = Reader;
     using const_iterator = const Reader;
 
     Reader() = delete;
@@ -179,7 +178,7 @@ protected:
     size_type row_num;
     Row row;
     
-    const iterator& operator++()
+    const_iterator& operator++()
     {
         if (iterate())
             return *this;
@@ -192,12 +191,12 @@ protected:
         return row;
     }
 
-    bool operator==(const iterator& it) const
+    bool operator==(const_iterator& it) const
     {
         return *this == it;
     }
 
-    bool operator!=(const iterator& it) const
+    bool operator!=(const_iterator& it) const
     {
         return *this != it;
     }
@@ -266,19 +265,18 @@ protected:
     }
 
 private:
-    const Reader* end_iter = nullptr;
+    // end_iter cannot point to anything else
+    Reader* const end_iter = nullptr;
 
     bool iterate()
     {
         std::string s;
-        if (std::getline(is, s))
-        {
-            row = split(s);
-            ++row_num;
-            return true;
-        }
+        if (!std::getline(is, s))
+            return false;
 
-        return false;
+        row = split(s);
+        ++row_num;
+        return true;
     }
 };
 
@@ -296,15 +294,13 @@ private:
     bool iterate()
     {
         std::string s;
-        if (std::getline(is, s))
-        {
-            row = split(s);
-            attach_fieldnames(row, &fieldnames);
-            ++row_num;
-            return true;
-        }
+        if (!std::getline(is, s))
+            return false;
 
-        return false;
+        row = split(s);
+        attach_fieldnames(row, &fieldnames);
+        ++row_num;
+        return true;
     }
 
     // use std::initializer_list<std::string> as headers can only be strings?
