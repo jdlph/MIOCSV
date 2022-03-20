@@ -153,7 +153,8 @@ private:
 
 class Reader {
 public:
-    using const_iterator = const Reader;
+    using iterator = Row*;
+    using const_iterator = const Row*;
 
     Reader() = delete;
 
@@ -162,7 +163,7 @@ public:
     {
     }
 
-    Reader(const Reader&) = default;
+    Reader(const Reader&) = delete;
     Reader& operator=(const Reader&) = delete;
 
     Reader(Reader&&) = default;
@@ -170,52 +171,49 @@ public:
 
     ~Reader() = default;
 
-    // we do not want users to retrieve begin() after iteration starts.
-    // thus, we make begin() protected and only provide range-for loop for users
-    // to retrieve each row
-    const_iterator& begin()
+    iterator begin()
     {
         // just in case users retrieve it after iteration starts
         if (row_num > 1)
-            return *end_iter;
+            return end_iter;
 
         try
         {
             iterate();
-            return *this;
+            return &row;
         }
         catch (IterationEnd)
         {
-            return *end_iter;
+            return end_iter;
         }
     }
 
-    const_iterator& end()
+    iterator end()
     {
-        return *end_iter;
+        return end_iter;
     }
 
-    const_iterator& operator++()
+    iterator operator++()
     {
         try
         {
             iterate();
-            return *this;
+            return &row;
         }
         catch (IterationEnd)
         {
-            return *end_iter;
+            return end_iter;
         }
     }
 
     bool operator==(const_iterator& it) const
     {
-        return *this == it;
+        return &row == it;
     }
 
     bool operator!=(const_iterator& it) const
     {
-        return *this != it;
+        return &row != it;
     }
 
     const Row& operator*() const
@@ -246,7 +244,7 @@ protected:
 
 private:
     // end_iter cannot point to anything else
-    Reader* const end_iter = nullptr;
+    iterator end_iter = nullptr;
 
     // support double quotes
     Row split(std::string& s) const
