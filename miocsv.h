@@ -88,6 +88,17 @@ public:
         }
     }
 
+    friend std::ostream& operator<<(std::ostream& os, const Row& r)
+    {
+        for (auto& s: r.records)
+        {
+            os << s << ',';
+        }
+        os << '\n';
+
+        return os;
+    }
+
     iterator begin()
     {
         return records.begin();
@@ -195,9 +206,6 @@ protected:
     }
 
 private:
-    // end_iter cannot point to anything else
-    // iterator end_iter = nullptr;
-
     // support double quotes
     Row split(std::string& s) const
     {
@@ -218,7 +226,8 @@ private:
                 {
                     s1 += std::string(b, i);
                     // use b = ++i?
-                    b = i + 1;
+                    // b = i + 1;
+                    b = ++i;
                 }
             }
             else if (*i == delim && !quoted)
@@ -234,7 +243,8 @@ private:
                     s1.clear();
                 }
 
-                b = i + 1;
+                // b = i + 1;
+                b = ++i;
             }
         }
 
