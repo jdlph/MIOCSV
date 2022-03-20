@@ -153,8 +153,7 @@ private:
 
 class Reader {
 public:
-    using iterator = Row*;
-    using const_iterator = const Row*;
+    class iterator;
 
     Reader() = delete;
 
@@ -171,55 +170,8 @@ public:
 
     ~Reader() = default;
 
-    iterator begin()
-    {
-        // just in case users retrieve it after iteration starts
-        if (row_num > 1)
-            return end_iter;
-
-        try
-        {
-            iterate();
-            return &row;
-        }
-        catch (IterationEnd)
-        {
-            return end_iter;
-        }
-    }
-
-    iterator end()
-    {
-        return end_iter;
-    }
-
-    iterator operator++()
-    {
-        try
-        {
-            iterate();
-            return &row;
-        }
-        catch (IterationEnd)
-        {
-            return end_iter;
-        }
-    }
-
-    bool operator==(const_iterator& it) const
-    {
-        return &row == it;
-    }
-
-    bool operator!=(const_iterator& it) const
-    {
-        return &row != it;
-    }
-
-    const Row& operator*() const
-    {
-        return row;
-    }
+    iterator begin();
+    iterator end();
 
 protected:
     std::ifstream& is;
@@ -244,7 +196,7 @@ protected:
 
 private:
     // end_iter cannot point to anything else
-    iterator end_iter = nullptr;
+    // iterator end_iter = nullptr;
 
     // support double quotes
     Row split(std::string& s) const
@@ -299,6 +251,78 @@ private:
         return r;
     }
 };
+
+class Reader::iterator {
+public:
+    iterator(Reader* r_) : r {r_} 
+    {
+        if (r == nullptr)
+            return;
+        
+        try
+        {
+            r->iterate();
+        }
+        catch (IterationEnd)
+        {
+            r = nullptr;
+        }
+    }
+
+    iterator(const iterator&) = default;
+    iterator& operator=(const iterator&) = delete;
+
+    iterator(iterator&&) = default;
+    iterator& operator=(iterator&&) = delete;
+
+    ~iterator() = default;
+    
+    iterator operator++()
+    {
+        try
+        {
+            r->iterate();
+            return *this;
+        }
+        catch(IterationEnd)
+        {
+            r = nullptr;
+            return nullptr;
+        }
+    }
+
+    bool operator==(const iterator& it) const
+    {
+        return r == it.r;
+    }
+
+    bool operator!=(const iterator& it) const
+    {
+        return r != it.r;
+    }
+
+    const Row& operator*() const
+    {
+        return r->row;
+    }
+
+private:
+    Reader* r;
+};
+
+Reader::iterator Reader::begin()
+{
+    // just in case users retrieve it after iteration starts
+    if (this->row_num > 1)
+        return nullptr;
+    
+    return iterator(this);
+}
+
+inline Reader::iterator Reader::end()
+{
+    return nullptr;
+}
 
 class DictReader : public Reader {
 public:

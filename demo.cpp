@@ -13,9 +13,10 @@ int main()
     {
         auto reader = miocsv::Reader(is);
         // use traditional for loop
-        for (auto iter = reader.begin(); iter != reader.end(); ++iter)
+        int i = 0;
+        for (auto iter = reader.begin(); iter != reader.end(); ++iter, ++i)
         {
-            std::cout << "running\n";
+            std::cout << i << '\n';
         }
 
         // use range-for loop
