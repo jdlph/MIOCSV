@@ -16,9 +16,9 @@ using FieldNames = std::map<std::string, size_type>;
 
 class Row {
 public:
-    using Record = std::vector<std::string>;
-    using iterator = Record::iterator;
-    using const_iterator = Record::const_iterator;
+    using Records = std::vector<std::string>;
+    using iterator = Records::iterator;
+    using const_iterator = Records::const_iterator;
 
     Row() = default;
 
@@ -26,7 +26,7 @@ public:
     Row(std::initializer_list<std::string> args)
     {
         for (auto& s: args)
-            record.emplace_back(s);
+            records.emplace_back(s);
     }
 
     template<typename T, typename... Args>
@@ -45,12 +45,12 @@ public:
 
     std::string& operator[](size_type i)
     {
-        return record[i];
+        return records[i];
     }
 
     const std::string& operator[](size_type i) const
     {
-        return record[i];
+        return records[i];
     }
 
     // use std::runtime_error?
@@ -59,7 +59,7 @@ public:
         try
         {
             size_type i = fieldnames->at(s);
-            return record[i];
+            return records[i];
         }
         catch(const std::out_of_range)
         {
@@ -76,7 +76,7 @@ public:
         try
         {
             size_type i = fieldnames->at(s);
-            return record[i];
+            return records[i];
         }
         catch(const std::out_of_range)
         {
@@ -90,52 +90,52 @@ public:
 
     iterator begin()
     {
-        return record.begin();
+        return records.begin();
     }
 
     const_iterator begin() const
     {
-        return record.begin();
+        return records.begin();
     }
 
     iterator end()
     {
-        return record.end();
+        return records.end();
     }
 
     const_iterator end() const
     {
-        return record.end();
+        return records.end();
     }
 
     size_type size() const
     {
-        return record.size();
+        return records.size();
     }
 
     bool empty() const
     {
-        return record.size() == 0;
+        return records.size() == 0;
     }
 
     // provide an overloaded form to take rvalue reference?
     void append(std::string& s)
     {
-        record.emplace_back(s);
+        records.emplace_back(s);
     }
 
 private:
-    Record record;
+    Records records;
     // reserved for DictReader
     const FieldNames* fieldnames = nullptr;
-    
+
     template<typename T>
     void convert_to_string(const T& t)
     {
         std::ostringstream os;
         os << t;
         // os.str() will be moved into record as os.str() is a rvalue reference
-        record.push_back(os.str());
+        records.push_back(os.str());
     }
 
     template<typename T, typename... Args>
@@ -177,19 +177,6 @@ protected:
     const char quote;
     size_type row_num;
     Row row;
-    
-    const_iterator& operator++()
-    {
-        if (iterate())
-            return *this;
-        else 
-            return *end_iter; 
-    }
-
-    Row& operator*()
-    {
-        return row;
-    }
 
     bool operator==(const_iterator& it) const
     {
@@ -200,7 +187,7 @@ protected:
     {
         return *this != it;
     }
-    
+
     const_iterator& begin() const
     {
         return *this;
@@ -209,6 +196,19 @@ protected:
     const_iterator& end() const
     {
         return *end_iter;
+    }
+
+    const_iterator& operator++()
+    {
+        if (iterate())
+            return *this;
+        else
+            return *end_iter;
+    }
+
+    Row& operator*()
+    {
+        return row;
     }
 
     // support double quotes
@@ -286,6 +286,7 @@ public:
         : Reader{is_, delim_}
     {
         setup_headers(fieldnames_);
+        iterate();
     }
 
 private:
@@ -306,14 +307,16 @@ private:
     // use std::initializer_list<std::string> as headers can only be strings?
     void setup_headers(const Row& r)
     {
-        if (fieldnames.empty())
+        for (size_type i = 0, sz = r.size(); i != sz; ++i)
+        {
+            const auto& s = r[i];
+            fieldnames[s] = i;
+        }
+
+        if (fieldnames.empty() && row_num == 0)
         {
             iterate();
-            for (size_type i = 0, sz = r.size(); i != sz; ++i)
-            {
-                const auto& s = r[i];
-                fieldnames[s] = i;
-            }
+            setup_headers(row);
         }
     }
 };
