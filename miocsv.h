@@ -61,11 +61,11 @@ public:
             size_type i = fieldnames->at(s);
             return records[i];
         }
-        catch(const std::out_of_range)
+        catch (const std::out_of_range)
         {
             throw std::string {s + " is not existing!"};
         }
-        catch(const std::exception& e)
+        catch (const std::exception& e)
         {
             std::cerr << e.what() << '\n';
         }
@@ -78,11 +78,11 @@ public:
             size_type i = fieldnames->at(s);
             return records[i];
         }
-        catch(const std::out_of_range)
+        catch (const std::out_of_range)
         {
             throw std::string {s + " is not existing!"};
         }
-        catch(const std::exception& e)
+        catch (const std::exception& e)
         {
             std::cerr << e.what() << '\n';
         }
@@ -178,6 +178,10 @@ protected:
     size_type row_num;
     Row row;
 
+    class IterationEnd {
+
+    };
+
     bool operator==(const_iterator& it) const
     {
         return *this == it;
@@ -188,28 +192,62 @@ protected:
         return *this != it;
     }
 
-    const_iterator& begin() const
+    // we do not want users to retrieve begin() after iteration starts.
+    // thus, we make begin() protected and only provide range-for loop for users
+    // to retrieve each row
+    const_iterator& begin()
     {
-        return *this;
+        // just in case users retrieve it after iteration starts
+        if (row_num > 1)
+            return *end_iter;
+
+        try
+        {
+            iterate();
+            return *this;
+        }
+        catch (IterationEnd)
+        {
+            return *end_iter;
+        }
     }
 
-    const_iterator& end() const
+    const_iterator& end()
     {
         return *end_iter;
     }
 
     const_iterator& operator++()
     {
-        if (iterate())
+        try
+        {
+            iterate();
             return *this;
-        else
+        }
+        catch (IterationEnd)
+        {
             return *end_iter;
+        }
     }
 
     Row& operator*()
     {
         return row;
     }
+
+    virtual void iterate()
+    {
+        std::string s;
+        if (!std::getline(is, s))
+            throw IterationEnd();
+
+        row = split(s);
+        ++row_num;
+    }
+
+private:
+    // end_iter cannot point to anything else
+    Reader* const end_iter = nullptr;
 
     // support double quotes
     Row split(std::string& s) const
@@ -263,21 +301,6 @@ protected:
         // use move constructor to avoid copy
         return r;
     }
-
-private:
-    // end_iter cannot point to anything else
-    Reader* const end_iter = nullptr;
-
-    bool iterate()
-    {
-        std::string s;
-        if (!std::getline(is, s))
-            return false;
-
-        row = split(s);
-        ++row_num;
-        return true;
-    }
 };
 
 class DictReader : public Reader {
@@ -286,25 +309,8 @@ public:
         : Reader{is_, delim_}
     {
         setup_headers(fieldnames_);
-        iterate();
     }
 
-private:
-    FieldNames fieldnames;
-
-    bool iterate()
-    {
-        std::string s;
-        if (!std::getline(is, s))
-            return false;
-
-        row = split(s);
-        attach_fieldnames(row, &fieldnames);
-        ++row_num;
-        return true;
-    }
-
-    // use std::initializer_list<std::string> as headers can only be strings?
     void setup_headers(const Row& r)
     {
         for (size_type i = 0, sz = r.size(); i != sz; ++i)
@@ -315,9 +321,25 @@ private:
 
         if (fieldnames.empty() && row_num == 0)
         {
-            iterate();
-            setup_headers(row);
+            try
+            {
+                iterate();
+                setup_headers(row);
+            }
+            catch (IterationEnd)
+            {
+                return;
+            }
         }
+    }
+
+private:
+    FieldNames fieldnames;
+
+    void iterate() override
+    {
+        Reader::iterate();
+        attach_fieldnames(row, &fieldnames);
     }
 };
 
