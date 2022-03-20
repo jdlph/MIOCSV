@@ -35,7 +35,7 @@ public:
         convert_to_string(t, args...);
     }
 
-    Row(const Row&) = delete;
+    Row(const Row&) = default;
     Row& operator=(const Row&) = delete;
 
     Row(Row&&) = default;
@@ -160,37 +160,15 @@ public:
     Reader(std::ifstream& is_, const char delim_ = ',')
         : is {is_}, delim {delim_}, quote {';'}, row_num {0}
     {
-        iterate();
     }
 
-    Reader(const Reader&) = delete;
+    Reader(const Reader&) = default;
     Reader& operator=(const Reader&) = delete;
 
-    Reader(Reader&&) = delete;
+    Reader(Reader&&) = default;
     Reader& operator=(Reader&&) = delete;
 
     ~Reader() = default;
-
-protected:
-    std::ifstream& is;
-    const char delim;
-    const char quote;
-    size_type row_num;
-    Row row;
-
-    class IterationEnd {
-
-    };
-
-    bool operator==(const_iterator& it) const
-    {
-        return *this == it;
-    }
-
-    bool operator!=(const_iterator& it) const
-    {
-        return *this != it;
-    }
 
     // we do not want users to retrieve begin() after iteration starts.
     // thus, we make begin() protected and only provide range-for loop for users
@@ -230,10 +208,31 @@ protected:
         }
     }
 
-    Row& operator*()
+    bool operator==(const_iterator& it) const
+    {
+        return *this == it;
+    }
+
+    bool operator!=(const_iterator& it) const
+    {
+        return *this != it;
+    }
+
+    const Row& operator*() const
     {
         return row;
     }
+
+protected:
+    std::ifstream& is;
+    const char delim;
+    const char quote;
+    size_type row_num;
+    Row row;
+
+    class IterationEnd {
+
+    };
 
     virtual void iterate()
     {

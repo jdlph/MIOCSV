@@ -1,2 +1,6 @@
 .vscode
+.DS_Store
 *.gch
+*.out
+/demo
+demo.dSYM
