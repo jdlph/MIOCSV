@@ -184,6 +184,11 @@ public:
     iterator begin();
     iterator end();
 
+    size_type get_row_num() const
+    {
+        return row_num;
+    }
+
 protected:
     std::ifstream& is;
     const char delim;

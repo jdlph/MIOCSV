@@ -13,19 +13,14 @@ int main()
     {
         // auto reader = miocsv::Reader(is);
         auto reader = miocsv::DictReader(is);
-        // use traditional for loop
-        int i = 0;
-        // for (auto iter = reader.begin(); iter != reader.end(); ++iter, ++i)
-        // {
-        //     std::cout << i << '\n';
-        // }
-
+        
+        auto i = 0;
         // use range-for loop
         for (auto& r: reader)
         {
-            std::cout << r << '\n';
+            std::cout << "line " << i  << ": "<< r << '\n';
+            
             ++i;
-
             if (i > 10)
                 break;
         }
