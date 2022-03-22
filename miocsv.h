@@ -129,10 +129,22 @@ public:
         return records.size() == 0;
     }
 
-    // provide an overloaded form to take rvalue reference?
+    // move non-const string
     void append(std::string& s)
     {
         records.emplace_back(s);
+    }
+
+    // move lvalue string
+    void append(std::string&& s)
+    {
+        records.emplace_back(s);
+    }
+
+    // no move for const string
+    void append(const std::string& s)
+    {
+        records.push_back(s);
     }
 
 private:
@@ -164,7 +176,7 @@ private:
 
 class Reader {
 public:
-    class iterator;
+    class ReaderIterator;
 
     Reader() = delete;
 
@@ -181,8 +193,8 @@ public:
 
     ~Reader() = default;
 
-    iterator begin();
-    iterator end();
+    ReaderIterator begin();
+    ReaderIterator end();
 
     size_type get_row_num() const
     {
@@ -267,11 +279,13 @@ private:
     }
 };
 
-class Reader::iterator {
+class Reader::ReaderIterator {
 public:
-    iterator(Reader* r_) : r {r_} 
+    ReaderIterator() = delete;
+    
+    ReaderIterator(Reader* r_) : r {r_} 
     {
-        if (r == nullptr)
+        if (!r)
             return;
         
         try
@@ -284,15 +298,15 @@ public:
         }
     }
 
-    iterator(const iterator&) = default;
-    iterator& operator=(const iterator&) = delete;
+    ReaderIterator(const ReaderIterator&) = default;
+    ReaderIterator& operator=(const ReaderIterator&) = delete;
 
-    iterator(iterator&&) = default;
-    iterator& operator=(iterator&&) = delete;
+    ReaderIterator(ReaderIterator&&) = default;
+    ReaderIterator& operator=(ReaderIterator&&) = delete;
 
-    ~iterator() = default;
+    ~ReaderIterator() = default;
     
-    iterator operator++()
+    ReaderIterator operator++()
     {
         try
         {
@@ -306,12 +320,12 @@ public:
         }
     }
 
-    bool operator==(const iterator& it) const
+    bool operator==(const ReaderIterator& it) const
     {
         return r == it.r;
     }
 
-    bool operator!=(const iterator& it) const
+    bool operator!=(const ReaderIterator& it) const
     {
         return r != it.r;
     }
@@ -325,16 +339,16 @@ private:
     Reader* r;
 };
 
-Reader::iterator Reader::begin()
+inline Reader::ReaderIterator Reader::begin()
 {
     // just in case users retrieve it after iteration starts
     if (this->row_num > 1)
         return nullptr;
     
-    return iterator(this);
+    return ReaderIterator(this);
 }
 
-inline Reader::iterator Reader::end()
+inline Reader::ReaderIterator Reader::end()
 {
     return nullptr;
 }
@@ -369,6 +383,11 @@ public:
         }
     }
 
+    const FieldNames& get_fieldnames() const
+    {
+        return fieldnames;
+    }
+
 private:
     FieldNames fieldnames;
 
@@ -385,5 +404,17 @@ class Writer {
 
 
 } // namespace miocsv
+
+
+std::ostream& operator<<(std::ostream& os, const miocsv::FieldNames& fns)
+{
+    for (auto& f: fns)
+    {
+        os << f.first << ',';
+    }
+    os << '\n';
+
+    return os;
+}
 
 #endif

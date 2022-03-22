@@ -6,22 +6,23 @@
 
 int main()
 {
-    std::string s = "link.csv";
-    std::ifstream is {s};
+    std::ifstream ist {"link.csv"};
 
-    if (is)
+    if (ist)
     {
         // auto reader = miocsv::Reader(is);
-        auto reader = miocsv::DictReader(is);
-        
-        auto i = 0;
-        // use range-for loop
-        for (auto& r: reader)
+        auto reader = miocsv::DictReader(ist);
+
+        // the key order is not preserved as we use tree-based map
+        std::cout << "headers are: " << reader.get_fieldnames();
+
+        // use range-for loop to print out the first 10 lines
+        for (auto& line: reader)
         {
-            std::cout << "line " << i  << ": "<< r << '\n';
+            auto row_num = reader.get_row_num();
+            std::cout << "line " << row_num  << ": " << line << '\n';
             
-            ++i;
-            if (i > 10)
+            if (row_num > 10)
                 break;
         }
     }
