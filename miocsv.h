@@ -135,13 +135,13 @@ public:
         records.emplace_back(s);
     }
 
-    // move lvalue string
+    // move rvalue string
     void append(std::string&& s)
     {
-        records.emplace_back(s);
+        records.push_back(s);
     }
 
-    // no move for const string
+    // copy const string with no move
     void append(const std::string& s)
     {
         records.push_back(s);
@@ -157,7 +157,7 @@ private:
     {
         std::ostringstream os;
         os << t;
-        // os.str() will be moved into record as os.str() is a rvalue reference
+        // os.str() will be moved into records as os.str() is a rvalue reference
         records.push_back(os.str());
     }
 
@@ -227,7 +227,7 @@ private:
     Row split(std::string& s) const
     {
         if (s.empty())
-            return nullptr;
+            return Row();
 
         Row r;
         std::string s1, s2;
@@ -242,7 +242,6 @@ private:
                 if (!quoted)
                 {
                     s1 += std::string(b, i);
-                    // use b = ++i?
                     // b = i + 1;
                     b = ++i;
                 }
@@ -282,12 +281,12 @@ private:
 class Reader::ReaderIterator {
 public:
     ReaderIterator() = delete;
-    
-    ReaderIterator(Reader* r_) : r {r_} 
+
+    ReaderIterator(Reader* r_) : r {r_}
     {
         if (!r)
             return;
-        
+
         try
         {
             r->iterate();
@@ -305,7 +304,7 @@ public:
     ReaderIterator& operator=(ReaderIterator&&) = delete;
 
     ~ReaderIterator() = default;
-    
+
     ReaderIterator operator++()
     {
         try
@@ -316,7 +315,7 @@ public:
         catch(IterationEnd)
         {
             r = nullptr;
-            return nullptr;
+            return *this;
         }
     }
 
@@ -344,7 +343,7 @@ inline Reader::ReaderIterator Reader::begin()
     // just in case users retrieve it after iteration starts
     if (this->row_num > 1)
         return nullptr;
-    
+
     return ReaderIterator(this);
 }
 
@@ -394,6 +393,10 @@ private:
     void iterate() override
     {
         Reader::iterate();
+        // do not take blank lines in consistent with Python csv.DictReader
+        while (row.empty())
+            Reader::iterate();
+
         attach_fieldnames(row, &fieldnames);
     }
 };
@@ -402,15 +405,40 @@ class Writer {
 
 };
 
+// some helper functions
+auto open_csv(const std::string& filename, const char mode = 'r')
+{
+    std::fstream fs;
+
+    const char mode_ = std::tolower(mode);
+    switch (mode_)
+    {
+        case 'r':
+        {
+            fs.open(filename, std::ios_base::in);
+            if (fs)
+                return fs;
+        }
+        case 'w':
+        {
+            fs.open(filename, std::ios_base::out);
+            if (fs)
+                return fs;
+        }
+        default:
+            std::cout << "please provide the right mode: 'r' for read or 'w' for write\n";
+            break;
+    }
+}
 
 } // namespace miocsv
 
 
 std::ostream& operator<<(std::ostream& os, const miocsv::FieldNames& fns)
 {
-    for (auto& f: fns)
+    for (const auto& fn: fns)
     {
-        os << f.first << ',';
+        os << fn.first << ',';
     }
     os << '\n';
 
