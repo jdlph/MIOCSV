@@ -15,6 +15,20 @@ using size_type = unsigned long;
 using FieldNames = std::map<std::string, size_type>;
 
 class Row {
+    friend void attach_fieldnames(Row& r, const FieldNames* fieldnames_)
+    {
+        r.fieldnames = fieldnames_;
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const Row& r)
+    {   
+        for (size_type i = 0, sz = r.size(); i != sz - 1; ++i)
+            os << r.records[i] << ',';
+        
+        os << r.records.back();
+
+        return os;
+    }
 public:
     using Records = std::vector<std::string>;
     using iterator = Records::iterator;
@@ -88,16 +102,6 @@ public:
         }
     }
 
-    friend std::ostream& operator<<(std::ostream& os, const Row& r)
-    {   
-        for (size_type i = 0, sz = r.size(); i != sz - 1; ++i)
-            os << r.records[i] << ',';
-        
-        os << r.records.back();
-
-        return os;
-    }
-
     iterator begin()
     {
         return records.begin();
@@ -165,11 +169,6 @@ private:
     {
         convert_to_string(t);
         convert_to_string(args...);
-    }
-
-    friend void attach_fieldnames(Row& r, const FieldNames* fieldnames_)
-    {
-        r.fieldnames = fieldnames_;
     }
 };
 
@@ -431,7 +430,7 @@ private:
 };
 
 // some helper functions
-auto open_csv(const std::string& filename, const char mode = 'r')
+std::fstream open_csv(const std::string& filename, const char mode = 'r')
 {
     std::fstream fs;
 
@@ -461,11 +460,14 @@ auto open_csv(const std::string& filename, const char mode = 'r')
 
 std::ostream& operator<<(std::ostream& os, const miocsv::FieldNames& fns)
 {
-    // note that it will print one additional trailing ','
-    for (const auto& fn: fns)
-    {
-        os << fn.first << ',';
-    }
+    // get the last fieldname
+    auto it_back = fns.end();
+    std::advance(it_back, -1);
+    
+    for (auto it = fns.begin(); it != it_back; ++it)
+        os << it->first << ',';
+
+    os << it_back->first;
 
     return os;
 }
