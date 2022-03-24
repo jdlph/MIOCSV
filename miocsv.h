@@ -29,6 +29,7 @@ class Row {
 
         return os;
     }
+
 public:
     using Records = std::vector<std::string>;
     using iterator = Records::iterator;
@@ -460,14 +461,16 @@ std::fstream open_csv(const std::string& filename, const char mode = 'r')
 
 std::ostream& operator<<(std::ostream& os, const miocsv::FieldNames& fns)
 {
-    // get the last fieldname
-    auto it_back = fns.end();
-    std::advance(it_back, -1);
-    
-    for (auto it = fns.begin(); it != it_back; ++it)
-        os << it->first << ',';
+    std::vector<std::pair<std::string, miocsv::size_type>> vec {fns.begin(), fns.end()};
+    // sort vec to restore the insertion order
+    std::sort(vec.begin(), vec.end(), [](auto& left, auto& right) { 
+        return left.second < right.second;
+    });
 
-    os << it_back->first;
+    for (miocsv::size_type i = 0, sz = vec.size() - 1; i != sz; ++i)
+        os << vec[i].first << ',';
+
+    os << vec.back().first;
 
     return os;
 }

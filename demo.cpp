@@ -13,7 +13,7 @@ int main()
         // auto reader = miocsv::Reader(ist);
         auto reader = miocsv::DictReader(ist);
 
-        // the order of headers is not preserved as we use tree-based map
+        // the order of headers is preserved as the input file
         std::cout << "headers are: " << reader.get_fieldnames() << '\n';
 
         // use range-for loop to print out the first 10 lines
