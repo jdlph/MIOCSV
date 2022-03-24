@@ -89,12 +89,11 @@ public:
     }
 
     friend std::ostream& operator<<(std::ostream& os, const Row& r)
-    {
-        for (auto& s: r.records)
-        {
-            os << s << ',';
-        }
-        os << '\n';
+    {   
+        for (size_type i = 0, sz = r.size(); i != sz - 1; ++i)
+            os << r.records[i] << ',';
+        
+        os << r.records.back();
 
         return os;
     }
@@ -402,7 +401,33 @@ private:
 };
 
 class Writer {
+public:
+    Writer() = delete;
 
+    Writer(std::ofstream& os_) : os {os_}
+    {
+    }
+
+    Writer(const Writer&) = delete;
+    Writer& operator=(const Writer) = delete;
+
+    Writer(Writer&&) = default;
+    Writer& operator=(Writer&&) = delete;
+
+    ~Writer() = default;
+
+    void write_row(const Row& r)
+    {
+        os << r << '\n';
+    }
+
+    void write_row(Row&& r)
+    {
+        os << r << '\n';
+    }
+
+private:
+    std::ofstream& os;
 };
 
 // some helper functions
@@ -436,11 +461,11 @@ auto open_csv(const std::string& filename, const char mode = 'r')
 
 std::ostream& operator<<(std::ostream& os, const miocsv::FieldNames& fns)
 {
+    // note that it will print one additional trailing ','
     for (const auto& fn: fns)
     {
         os << fn.first << ',';
     }
-    os << '\n';
 
     return os;
 }
