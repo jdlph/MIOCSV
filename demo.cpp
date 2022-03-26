@@ -33,9 +33,10 @@ int main()
     {
         auto writer = miocsv::Writer(ost);
         // construct a dedicate record to be written using Row
-        Row r = {"first way to write a record", "sting", 1, 1.1};
+        Row r = {"first way to write a record include string, int, and double", 
+                 "sting", 1, 1.1};
         writer.write_row(r);
-        // or simply place a record to be written into write_row()
+        // or simply place a record to be written directly into write_row()
         writer.write_row({"second way to write a record", "string", 2, 2.0});
     }
 

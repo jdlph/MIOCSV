@@ -345,13 +345,13 @@ public:
         try
         {
             r->iterate();
-            return *this;
         }
         catch(IterationEnd)
         {
             r = nullptr;
-            return *this;
         }
+
+        return *this;
     }
 
     bool operator==(const ReaderIterator& it) const
@@ -440,7 +440,7 @@ class Writer {
 public:
     Writer() = delete;
 
-    Writer(std::ofstream& os_) : os {os_}
+    Writer(std::ofstream& os_, const char delim_ = ',') : os {os_}, delim {delim_}
     {
     }
 
@@ -452,18 +452,43 @@ public:
 
     ~Writer() = default;
 
+    /**
+     * @brief write a row of records into the file
+     * 
+     * if no records contain the delimiter, then a simple implemention via the
+     * overloaded operator<< for Row would work fine, i.e., os << r << '\n'.
+     * 
+     * @param r an instance of miocsv::Row
+     */
     void write_row(const Row& r)
     {
-        os << r << '\n';
+        for (auto it = r.begin(); it != r.end(); ++it)
+        {
+            // check if the current record contains the delimiter or not
+            if (std::find(it->begin(), it->end(), delim) != it->end())
+                os << '"' << *it << '"' << delim;
+            else
+                os << *it << delim;
+        }
+        os << '\n';
     }
 
     void write_row(Row&& r)
     {
-        os << r << '\n';
+        for (auto it = r.begin(); it != r.end(); ++it)
+        {
+            // check if the current record contains the delimiter or not
+            if (std::find(it->begin(), it->end(), delim) != it->end())
+                os << '"' << *it << '"' << delim;
+            else
+                os << *it << delim;
+        }
+        os << '\n';
     }
 
 private:
     std::ofstream& os;
+    const char delim;
 };
 
 // some helper functions
