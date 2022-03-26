@@ -21,12 +21,15 @@ class Row {
         if (r.fieldnames->size() != r.size())
         {
             std::cout << "CAUTION: Data Inconsistency! " << r.fieldnames->size()
-                      << "fieldnames vs. " << r.size() << " fields\n";
+                      << " fieldnames vs. " << r.size() << " fields\n";
         }
     }
 
     friend std::ostream& operator<<(std::ostream& os, const Row& r)
     {
+        if (r.empty())
+            return os;
+
         for (size_type i = 0, sz = r.size(); i != sz - 1; ++i)
             os << r.records[i] << ',';
 
@@ -287,7 +290,6 @@ private:
                 if (!quoted)
                 {
                     s1 += std::string(b, i);
-                    // b = i + 1;
                     b = ++i;
                 }
             }
@@ -304,7 +306,6 @@ private:
                     s1.clear();
                 }
 
-                // b = i + 1;
                 b = ++i;
             }
         }
@@ -442,7 +443,8 @@ private:
         while (row.empty())
             Reader::iterate();
 
-        attach_fieldnames(row, &fieldnames);
+        if (row_num > 1)
+            attach_fieldnames(row, &fieldnames);
     }
 };
 
@@ -546,6 +548,9 @@ std::fstream open_csv(const std::string& filename, const char mode = 'r')
 
 std::ostream& operator<<(std::ostream& os, const miocsv::FieldNames& fns)
 {
+    if (fns.empty())
+        return os;
+
     std::vector<std::pair<std::string, miocsv::size_type>> vec {fns.begin(), fns.end()};
     // sort vec to restore the insertion order
     std::sort(vec.begin(), vec.end(), [](auto& left, auto& right) {

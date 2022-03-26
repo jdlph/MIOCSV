@@ -8,7 +8,7 @@ using miocsv::Row;
 
 int main()
 {
-    std::ifstream ist {"link.csv"};
+    std::ifstream ist {"irregular.csv"};
     if (ist)
     {
         // auto reader = miocsv::Reader(ist);

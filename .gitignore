@@ -4,3 +4,4 @@
 *.out
 /demo
 demo.dSYM
+output.csv
