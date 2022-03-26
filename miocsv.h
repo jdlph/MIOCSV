@@ -20,16 +20,16 @@ class Row {
         r.fieldnames = fieldnames_;
         if (r.fieldnames->size() != r.size())
         {
-            std::cout << "CAUTION: Data Inconsistency! " << r.fieldnames->size() 
+            std::cout << "CAUTION: Data Inconsistency! " << r.fieldnames->size()
                       << "fieldnames vs. " << r.size() << " fields\n";
         }
     }
 
     friend std::ostream& operator<<(std::ostream& os, const Row& r)
-    {   
+    {
         for (size_type i = 0, sz = r.size(); i != sz - 1; ++i)
             os << r.records[i] << ',';
-        
+
         os << r.records.back();
 
         return os;
@@ -75,14 +75,14 @@ public:
 
     // use std::runtime_error?
     std::string& operator[](const std::string& s)
-    {   
+    {
         try
         {
             size_type i = fieldnames->at(s);
             // more fieldnames than fields
             if (i >= records.size())
                 throw NoRecord();
-            
+
             return records[i];
         }
         catch (const std::out_of_range)
@@ -97,25 +97,25 @@ public:
 
     /**
      * @brief retrieve a field (record) using fieldname (header)
-     * 
+     *
      * in case of data inconsistency, the following two cases are considered.
-     * 
+     *
      * 1. if there are more fields than fieldnames, users can only retrieve those
-     * extra fields (with no corresponding fieldnames) using indices via overloaded 
+     * extra fields (with no corresponding fieldnames) using indices via overloaded
      * [].
      * 2. if there are more fieldnames than fields, an exception NoRecord will be
      * thrown at run time.
-     * 
-     * Note that our way handling these two exceptions are different with Python 
-     * csv.DictReader, where, extra fields will be concatenated as a list 
+     *
+     * Note that our way handling these two exceptions are different with Python
+     * csv.DictReader, where, extra fields will be concatenated as a list
      * (of strings) with None assigned as a new fieldname for case 1; None will
      * be output for case 2.
-     * 
-     * @param s 
-     * @return const std::string& 
+     *
+     * @param s
+     * @return const std::string&
      */
     const std::string& operator[](const std::string& s) const
-    {        
+    {
         try
         {
             size_type i = fieldnames->at(s);
@@ -133,6 +133,16 @@ public:
         {
             std::cerr << e.what() << '\n';
         }
+    }
+
+    std::string& back()
+    {
+        return records.back();
+    }
+
+    const std::string& back() const
+    {
+        return records.back();
     }
 
     iterator begin()
@@ -454,15 +464,15 @@ public:
 
     /**
      * @brief write a row of records into the file
-     * 
+     *
      * if no records contain the delimiter, then a simple implemention via the
      * overloaded operator<< for Row would work fine, i.e., os << r << '\n'.
-     * 
+     *
      * @param r an instance of miocsv::Row
      */
     void write_row(const Row& r)
     {
-        for (auto it = r.begin(); it != r.end(); ++it)
+        for (auto it = r.begin(), it_end = r.end() - 1; it != it_end; ++it)
         {
             // check if the current record contains the delimiter or not
             if (std::find(it->begin(), it->end(), delim) != it->end())
@@ -470,12 +480,19 @@ public:
             else
                 os << *it << delim;
         }
+
+        // the last record
+        if (std::find(r.back().begin(), r.back().end(), delim) != r.back().end())
+            os << '"' << r.back() << '"';
+        else
+            os << r.back();
+
         os << '\n';
     }
 
     void write_row(Row&& r)
     {
-        for (auto it = r.begin(); it != r.end(); ++it)
+        for (auto it = r.begin(), it_end = r.end() - 1; it != it_end; ++it)
         {
             // check if the current record contains the delimiter or not
             if (std::find(it->begin(), it->end(), delim) != it->end())
@@ -483,6 +500,13 @@ public:
             else
                 os << *it << delim;
         }
+
+        // the last record
+        if (std::find(r.back().begin(), r.back().end(), delim) != r.back().end())
+            os << '"' << r.back() << '"';
+        else
+            os << r.back();
+
         os << '\n';
     }
 
@@ -524,7 +548,7 @@ std::ostream& operator<<(std::ostream& os, const miocsv::FieldNames& fns)
 {
     std::vector<std::pair<std::string, miocsv::size_type>> vec {fns.begin(), fns.end()};
     // sort vec to restore the insertion order
-    std::sort(vec.begin(), vec.end(), [](auto& left, auto& right) { 
+    std::sort(vec.begin(), vec.end(), [](auto& left, auto& right) {
         return left.second < right.second;
     });
 
