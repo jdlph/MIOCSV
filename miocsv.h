@@ -69,11 +69,31 @@ public:
     }
 
     // use std::runtime_error?
-    std::string& operator[](std::string& s)
-    {
+    std::string& operator[](const std::string& s)
+    {   
+        // more fields than fieldnames
+        if (s == empty_str)
+        {
+            auto d = records.size() - fieldnames->size();
+            if (d > 0)
+            {
+                extra_str.clear();
+                for (auto i = fieldnames->size(), sz = fieldnames->size() + d; i != sz; ++i)
+                    extra_str.append(records[i]);
+
+                return extra_str;
+            }
+
+            throw std::string {s + " is not existing!"};
+        }
+        
         try
         {
             size_type i = fieldnames->at(s);
+            // more fieldnames than fields
+            if (i >= records.size())
+                return empty_str;
+            
             return records[i];
         }
         catch (const std::out_of_range)
@@ -86,11 +106,15 @@ public:
         }
     }
 
-    const std::string& operator[](std::string& s) const
-    {
+    const std::string& operator[](const std::string& s) const
+    {        
         try
         {
             size_type i = fieldnames->at(s);
+            // more fieldnames than fields
+            if (i >= records.size())
+                return empty_str;
+
             return records[i];
         }
         catch (const std::out_of_range)
@@ -155,6 +179,12 @@ private:
     Records records;
     // reserved for DictReader
     const FieldNames* fieldnames = nullptr;
+    std::string empty_str {"NA"};
+    std::string extra_str;
+
+    class NoRecord {
+
+    };
 
     template<typename T>
     void convert_to_string(const T& t)
