@@ -18,6 +18,11 @@ class Row {
     friend void attach_fieldnames(Row& r, const FieldNames* fieldnames_)
     {
         r.fieldnames = fieldnames_;
+        if (r.fieldnames->size() != r.size())
+        {
+            std::cout << "CAUTION: Data Inconsistency! " << r.fieldnames->size() 
+                      << "fieldnames vs. " << r.size() << " fields\n";
+        }
     }
 
     friend std::ostream& operator<<(std::ostream& os, const Row& r)
@@ -71,28 +76,12 @@ public:
     // use std::runtime_error?
     std::string& operator[](const std::string& s)
     {   
-        // more fields than fieldnames
-        if (s == empty_str)
-        {
-            auto d = records.size() - fieldnames->size();
-            if (d > 0)
-            {
-                extra_str.clear();
-                for (auto i = fieldnames->size(), sz = fieldnames->size() + d; i != sz; ++i)
-                    extra_str.append(records[i]);
-
-                return extra_str;
-            }
-
-            throw std::string {s + " is not existing!"};
-        }
-        
         try
         {
             size_type i = fieldnames->at(s);
             // more fieldnames than fields
             if (i >= records.size())
-                return empty_str;
+                throw NoRecord();
             
             return records[i];
         }
@@ -106,6 +95,25 @@ public:
         }
     }
 
+    /**
+     * @brief retrieve a field (record) using fieldname (header)
+     * 
+     * in case of data inconsistency, the following two cases are considered.
+     * 
+     * 1. if there are more fields than fieldnames, users can only retrieve those
+     * extra fields (with no corresponding fieldnames) using indices via overloaded 
+     * [].
+     * 2. if there are more fieldnames than fields, an exception NoRecord will be
+     * thrown at run time.
+     * 
+     * Note that our way handling these two exceptions are different with Python 
+     * csv.DictReader, where, extra fields will be concatenated as a list 
+     * (of strings) with None assigned as a new fieldname for case 1; None will
+     * be output for case 2.
+     * 
+     * @param s 
+     * @return const std::string& 
+     */
     const std::string& operator[](const std::string& s) const
     {        
         try
@@ -113,7 +121,7 @@ public:
             size_type i = fieldnames->at(s);
             // more fieldnames than fields
             if (i >= records.size())
-                return empty_str;
+                throw NoRecord();
 
             return records[i];
         }
@@ -179,8 +187,6 @@ private:
     Records records;
     // reserved for DictReader
     const FieldNames* fieldnames = nullptr;
-    std::string empty_str {"NA"};
-    std::string extra_str;
 
     class NoRecord {
 
@@ -196,7 +202,7 @@ private:
     }
 
     template<typename T, typename... Args>
-    void covert_to_string(const T& t, const Args&... args)
+    void convert_to_string(const T& t, const Args&... args)
     {
         convert_to_string(t);
         convert_to_string(args...);
