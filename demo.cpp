@@ -11,11 +11,11 @@ int main()
     std::ifstream ist {"irregular.csv"};
     if (ist)
     {
-        // auto reader = miocsv::Reader(ist);
-        auto reader = miocsv::DictReader(ist);
+        auto reader = miocsv::Reader(ist);
+        // auto reader = miocsv::DictReader(ist);
 
         // the order of headers is preserved as the input file
-        std::cout << "headers are: " << reader.get_fieldnames() << '\n';
+        // std::cout << "headers are: " << reader.get_fieldnames() << '\n';
 
         // use range-for loop to print out the first 10 lines
         for (const auto& line: reader)

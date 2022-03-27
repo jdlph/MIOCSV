@@ -229,7 +229,7 @@ public:
     Reader() = delete;
 
     Reader(std::ifstream& is_, const char delim_ = ',')
-        : is {is_}, delim {delim_}, quote {';'}, row_num {0}
+        : is {is_}, delim {delim_}, quote {'"'}, row_num {0}
     {
     }
 
@@ -289,24 +289,25 @@ private:
                 quoted = quoted ? false : true;
                 if (!quoted)
                 {
-                    s1 += std::string(b, i);
-                    b = ++i;
+                    s1 += std::string(b, i + 1);
+                    b = i + 1;
                 }
             }
             else if (*i == delim && !quoted)
             {
-                if (i > b)
+                if (!s1.empty() && *b != quote)
+                {
+                    s1.append(std::string(b, i));
+                    r.append(s1);
+                    s1.clear();
+                }
+                else if (i > b)
                 {
                     s2 = std::string(b, i);
                     r.append(s2);
                 }
-                else
-                {
-                    r.append(s1);
-                    s1.clear();
-                }
 
-                b = ++i;
+                b = i + 1;
             }
         }
 
