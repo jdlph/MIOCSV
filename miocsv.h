@@ -33,7 +33,7 @@ class Row {
         for (size_type i = 0, sz = r.size(); i != sz - 1; ++i)
             os << r.records[i] << ',';
 
-        os << r.records.back();
+        os << r.back();
 
         return os;
     }
@@ -260,13 +260,33 @@ protected:
 
     };
 
+    struct InvalidRow : public std::runtime_error {
+        InvalidRow() = delete;
+
+        InvalidRow(size_type row_num, std::string&& str)
+            : std::runtime_error{std::string{"CAUTION: Invalid Row! Any value after quoted field is not allowed in line " 
+                                             + std::to_string(row_num + 1) + ". Invalid Filed: " + str}
+              } 
+        {
+        }
+    };
+
     virtual void iterate()
     {
         std::string s;
         if (!std::getline(is, s))
             throw IterationEnd();
 
-        row = split(s);
+        try
+        {
+            row = split(s);
+        }
+        catch (const InvalidRow& e)
+        {
+            std::cout << e.what() << '\n';
+            iterate();
+        }
+        
         ++row_num;
     }
 
@@ -295,9 +315,11 @@ private:
             }
             else if (*i == delim && !quoted)
             {
-                if (!s1.empty() && *b != quote)
+                if (!s1.empty())
                 {
-                    s1.append(std::string(b, i));
+                    if (*b != quote && *b != delim)
+                        throw InvalidRow(row_num, std::string(b, i));
+                    
                     r.append(s1);
                     s1.clear();
                 }
@@ -471,7 +493,7 @@ public:
      * if no records contain the delimiter, then a simple implemention via the
      * overloaded operator<< for Row would work fine, i.e., os << r << '\n'.
      *
-     * @param r an instance of miocsv::Row
+     * @param r a const reference of miocsv::Row
      */
     void write_row(const Row& r)
     {
