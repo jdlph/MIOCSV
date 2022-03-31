@@ -196,6 +196,11 @@ public:
         records.push_back(s);
     }
 
+    void append(const std::string_view sv)
+    {
+        records.push_back(std::string{sv});
+    }
+
 private:
     Records records;
     // reserved for DictReader
@@ -265,7 +270,14 @@ protected:
 
         InvalidRow(size_type row_num, std::string&& str)
             : std::runtime_error{std::string{"CAUTION: Invalid Row! Any value after quoted field is not allowed in line " 
-                                             + std::to_string(row_num + 1) + ". Invalid Filed: " + str}
+                                             + std::to_string(row_num + 1) + ". Invalid Field: " + str}
+              } 
+        {
+        }
+
+        InvalidRow(size_type row_num, const std::string& str)
+            : std::runtime_error{std::string{"CAUTION: Invalid Row! Any value after quoted field is not allowed in line " 
+                                             + std::to_string(row_num + 1) + " after " + str}
               } 
         {
         }
@@ -298,7 +310,7 @@ private:
             return Row();
 
         Row r;
-        std::string s1, s2;
+        std::string s1;
 
         bool quoted = false;
         auto b = s.begin();
@@ -306,28 +318,24 @@ private:
         {
             if (*i == quote)
             {
-                quoted = quoted ? false : true;
+                quoted ^= true;
                 if (!quoted)
                 {
                     s1 += std::string(b, i + 1);
                     b = i + 1;
+                    if (*b != quote && *b != delim && b != e)
+                        throw InvalidRow(row_num, s1);
                 }
             }
             else if (*i == delim && !quoted)
             {
                 if (!s1.empty())
                 {
-                    if (*b != quote && *b != delim)
-                        throw InvalidRow(row_num, std::string(b, i));
-                    
                     r.append(s1);
                     s1.clear();
                 }
                 else if (i > b)
-                {
-                    s2 = std::string(b, i);
-                    r.append(s2);
-                }
+                    r.append(std::string(b, i));
 
                 b = i + 1;
             }
@@ -337,10 +345,7 @@ private:
         if (!s1.empty())
             r.append(s1);
         else
-        {
-            s2 = std::string(b, s.end());
-            r.append(s2);
-        }
+            r.append(std::string(b, s.end()));
 
         // use move constructor to avoid copy
         return r;
