@@ -14,6 +14,48 @@ namespace miocsv
 using size_type = unsigned long;
 using FieldNames = std::map<std::string, size_type>;
 
+class StringSpan {
+public:
+    using iterator = std::string::const_iterator;
+
+    StringSpan() = delete;
+
+    explicit StringSpan(iterator it) : head {it}, tail {it}
+    {
+    }
+
+    StringSpan(const StringSpan&) = delete;
+    StringSpan& operator=(const StringSpan&) = delete;
+
+    StringSpan(StringSpan&&) = delete;
+    StringSpan& operator=(StringSpan&&) = delete;
+
+    bool empty() const
+    {
+        return tail - head == 0;
+    }
+
+    void extend(iterator it)
+    {
+        // check it > tail?
+        tail = it;
+    }
+
+    void reset(iterator it)
+    {
+        head = tail = it;
+    }
+
+    std::string to_string() const
+    {
+        return std::string{head, tail};
+    }
+
+private:
+    iterator head;
+    iterator tail;
+};
+
 class Row {
     friend void attach_fieldnames(Row& r, const FieldNames* fieldnames_, size_type row_num)
     {
@@ -201,6 +243,11 @@ public:
         records.push_back(std::string{sv});
     }
 
+    void append(const StringSpan& ss)
+    {
+        records.push_back(ss.to_string());
+    }
+
 private:
     Records records;
     // reserved for DictReader
@@ -269,10 +316,10 @@ protected:
         InvalidRow() = delete;
 
         InvalidRow(size_type row_num, const std::string& str)
-            : std::runtime_error{std::string{"CAUTION: Invalid Row at line " 
-                                             + std::to_string(row_num + 1) 
-                                             + "! Any value after quoted field is not allowed:" 
-                                             + " invalid field found after " + str}} 
+            : std::runtime_error{std::string{"CAUTION: Invalid Row at line "
+                                             + std::to_string(row_num + 1)
+                                             + "! Any value after quoted field is not allowed:"
+                                             + " invalid field found after " + str}}
         {
         }
     };
@@ -285,7 +332,7 @@ protected:
 
         try
         {
-            row = split(s);
+            row = split2(s);
         }
         catch (const InvalidRow& e)
         {
@@ -294,7 +341,7 @@ protected:
             // if DictReader is being used.
             Reader::iterate();
         }
-        
+
         ++row_num;
     }
 
@@ -346,7 +393,54 @@ private:
         // use move constructor to avoid copy
         return r;
     }
+
+    Row split2(std::string& s) const;
 };
+
+Row Reader::split2(std::string& s) const
+{
+    if (s.empty())
+        return Row();
+
+    bool quoted = false;
+    auto b = s.begin();
+    StringSpan ss{b};
+    Row r;
+
+    for (auto i = s.begin(), e = s.end(); i != e; ++i)
+    {
+        if (*i == quote)
+        {
+            quoted ^= true;
+            if (!quoted)
+            {
+                b = i + 1;
+                ss.extend(b);
+                if (*b != quote && *b != delim && b != e)
+                    throw InvalidRow(row_num, ss.to_string());
+            }
+        }
+        else if (*i == delim && !quoted)
+        {
+            if (!ss.empty())
+                r.append(ss);
+            else if (i > b)
+                r.append(std::string(b, i));
+
+            b = i + 1;
+            ss.reset(b);
+        }
+    }
+
+    // last one
+    if (!ss.empty())
+        r.append(ss);
+    else
+        r.append(std::string(b, s.end()));
+
+    // use move constructor to avoid copy
+    return r;
+}
 
 class Reader::ReaderIterator {
 public:
