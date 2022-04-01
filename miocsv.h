@@ -14,13 +14,14 @@ namespace miocsv
 using size_type = unsigned long;
 using FieldNames = std::map<std::string, size_type>;
 
+template <typename InputIt>
 class StringSpan {
 public:
-    using iterator = std::string::const_iterator;
+    // using iterator = std::string::const_iterator;
 
     StringSpan() = delete;
 
-    explicit StringSpan(iterator it) : head {it}, tail {it}
+    explicit StringSpan(const InputIt& it) : head {it}, tail {it}
     {
     }
 
@@ -35,13 +36,13 @@ public:
         return tail - head == 0;
     }
 
-    void extend(iterator it)
+    void extend(const InputIt& it)
     {
         // check it > tail?
         tail = it;
     }
 
-    void reset(iterator it)
+    void reset(const InputIt& it)
     {
         head = tail = it;
     }
@@ -52,8 +53,8 @@ public:
     }
 
 private:
-    iterator head;
-    iterator tail;
+    InputIt head;
+    InputIt tail;
 };
 
 class Row {
@@ -243,11 +244,6 @@ public:
         records.push_back(std::string{sv});
     }
 
-    void append(const StringSpan& ss)
-    {
-        records.push_back(ss.to_string());
-    }
-
 private:
     Records records;
     // reserved for DictReader
@@ -395,6 +391,7 @@ private:
     }
 
     Row split2(std::string& s) const;
+    Row split2(std::string_view s) const;
 };
 
 Row Reader::split2(std::string& s) const
@@ -404,7 +401,7 @@ Row Reader::split2(std::string& s) const
 
     bool quoted = false;
     auto b = s.begin();
-    StringSpan ss{b};
+    StringSpan<std::string::iterator> ss{b};
     Row r;
 
     for (auto i = s.begin(), e = s.end(); i != e; ++i)
@@ -423,7 +420,7 @@ Row Reader::split2(std::string& s) const
         else if (*i == delim && !quoted)
         {
             if (!ss.empty())
-                r.append(ss);
+                r.append(ss.to_string());
             else if (i > b)
                 r.append(std::string(b, i));
 
@@ -434,7 +431,52 @@ Row Reader::split2(std::string& s) const
 
     // last one
     if (!ss.empty())
-        r.append(ss);
+        r.append(ss.to_string());
+    else
+        r.append(std::string(b, s.end()));
+
+    // use move constructor to avoid copy
+    return r;
+}
+
+Row Reader::split2(std::string_view s) const
+{
+    if (s.empty())
+        return Row();
+
+    bool quoted = false;
+    auto b = s.begin();
+    StringSpan<const char*> ss{b};
+    Row r;
+
+    for (auto i = s.begin(), e = s.end(); i != e; ++i)
+    {
+        if (*i == quote)
+        {
+            quoted ^= true;
+            if (!quoted)
+            {
+                b = i + 1;
+                ss.extend(b);
+                if (*b != quote && *b != delim && b != e)
+                    throw InvalidRow(row_num, ss.to_string());
+            }
+        }
+        else if (*i == delim && !quoted)
+        {
+            if (!ss.empty())
+                r.append(ss.to_string());
+            else if (i > b)
+                r.append(std::string(b, i));
+
+            b = i + 1;
+            ss.reset(b);
+        }
+    }
+
+    // last one
+    if (!ss.empty())
+        r.append(ss.to_string());
     else
         r.append(std::string(b, s.end()));
 
