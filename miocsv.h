@@ -15,13 +15,13 @@ using size_type = unsigned long;
 using FieldNames = std::map<std::string, size_type>;
 
 class Row {
-    friend void attach_fieldnames(Row& r, const FieldNames* fieldnames_)
+    friend void attach_fieldnames(Row& r, const FieldNames* fieldnames_, size_type row_num)
     {
         r.fieldnames = fieldnames_;
         if (r.fieldnames->size() != r.size())
         {
-            std::cout << "CAUTION: Data Inconsistency! " << r.fieldnames->size()
-                      << " fieldnames vs. " << r.size() << " fields\n";
+            std::cout << "CAUTION: Data Inconsistency at line " + std::to_string(row_num) << ": "
+                      << r.fieldnames->size() << " fieldnames vs. " << r.size() << " fields\n";
         }
     }
 
@@ -268,17 +268,11 @@ protected:
     struct InvalidRow : public std::runtime_error {
         InvalidRow() = delete;
 
-        InvalidRow(size_type row_num, std::string&& str)
-            : std::runtime_error{std::string{"CAUTION: Invalid Row! Any value after quoted field is not allowed in line " 
-                                             + std::to_string(row_num + 1) + ". Invalid Field: " + str}
-              } 
-        {
-        }
-
         InvalidRow(size_type row_num, const std::string& str)
-            : std::runtime_error{std::string{"CAUTION: Invalid Row! Any value after quoted field is not allowed in line " 
-                                             + std::to_string(row_num + 1) + " after " + str}
-              } 
+            : std::runtime_error{std::string{"CAUTION: Invalid Row at line " 
+                                             + std::to_string(row_num + 1) 
+                                             + "! Any value after quoted field is not allowed:" 
+                                             + " invalid field found after " + str}} 
         {
         }
     };
@@ -296,7 +290,9 @@ protected:
         catch (const InvalidRow& e)
         {
             std::cout << e.what() << '\n';
-            iterate();
+            // this is necessary. otherwise, DictReader::iterate() will be called
+            // if DictReader is being used.
+            Reader::iterate();
         }
         
         ++row_num;
@@ -472,7 +468,7 @@ private:
             Reader::iterate();
 
         if (row_num > 1)
-            attach_fieldnames(row, &fieldnames);
+            attach_fieldnames(row, &fieldnames, row_num);
     }
 };
 
@@ -579,9 +575,11 @@ std::ostream& operator<<(std::ostream& os, const miocsv::FieldNames& fns)
     if (fns.empty())
         return os;
 
-    std::vector<std::pair<std::string, miocsv::size_type>> vec {fns.begin(), fns.end()};
+    using name_pos = std::pair<std::string, miocsv::size_type>;
+
+    std::vector<name_pos> vec {fns.begin(), fns.end()};
     // sort vec to restore the insertion order
-    std::sort(vec.begin(), vec.end(), [](auto& left, auto& right) {
+    std::sort(vec.begin(), vec.end(), [](const name_pos& left, const name_pos& right) {
         return left.second < right.second;
     });
 
