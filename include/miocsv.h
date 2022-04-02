@@ -1,7 +1,9 @@
 #ifndef GUARD_MIOCSV_H
 #define GUARD_MIOCSV_H
 
-#if (defined(USE_MIO) && __cplusplus > 202002L)
+#include <build_config.h>
+
+#ifdef USE_MIO
 #include "mio/stringreader.hpp"
 #endif
 
@@ -153,7 +155,7 @@ public:
         }
         catch (const std::out_of_range)
         {
-            std::cerr << "std::out_of_range " << s << " is not existing!";
+            std::cerr << "std::out_of_range " << s << " is not existing!\n";
         }
         catch (const std::exception& e)
         {
@@ -193,7 +195,7 @@ public:
         }
         catch (const std::out_of_range)
         {
-            std::cerr << "std::out_of_range " << s << " is not existing!";
+            std::cerr << "std::out_of_range " << s << " is not existing!\n";
         }
         catch (const std::exception& e)
         {
@@ -305,7 +307,7 @@ public:
 
     Reader() = delete;
 
-#if (defined(USE_MIO) && __cplusplus > 202002L)
+#ifdef USE_MIO
     Reader(mio::StringReader& sr_, const char delim_ = ',')
         : sr {sr_}, delim {delim_}, quote {'"'}, row_num {0}
 #else
@@ -332,7 +334,7 @@ public:
     }
 
 protected:
-#if (defined(USE_MIO) && __cplusplus > 202002L)
+#ifdef USE_MIO
     mio::StringReader& sr;
 #else
     std::ifstream& is;
@@ -360,11 +362,11 @@ protected:
 
     virtual void iterate()
     {
-#if (defined(USE_MIO) && __cplusplus > 202002L)
-        std::string_view s;
-        if (!sr.getline())
+#ifdef USE_MIO
+        if (sr.eof())
             throw IterationEnd();
-        std::cout << "use mio\n";
+        
+        std::string_view s = sr.getline();
 #else
         std::string s;
         if (!std::getline(is, s))
@@ -401,7 +403,7 @@ Row Reader::split(const std::string& s) const
     Row r;
     std::string s1;
 
-    bool quoted = false;
+    auto quoted = false;
     auto b = s.begin();
     for (auto i = s.begin(), e = s.end(); i != e; ++i)
     {
@@ -446,10 +448,11 @@ Row Reader::split2(const C& c) const
     if (c.empty())
         return Row();
 
-    bool quoted = false;
     auto b = c.begin();
     StringRange<C> sr{b};
+    
     Row r;
+    auto quoted = false;
 
     for (auto i = c.begin(), e = c.end(); i != e; ++i)
     {
@@ -562,7 +565,7 @@ inline Reader::ReaderIterator Reader::end()
 
 class DictReader : public Reader {
 public:
-#if (defined(USE_MIO) && __cplusplus > 202002L)
+#ifdef USE_MIO
     DictReader(mio::StringReader& sr_, const Row& fieldnames_ = {}, const char delim_ = ',')
         : Reader{sr_, delim_}
 #else

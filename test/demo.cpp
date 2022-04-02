@@ -1,4 +1,5 @@
 #include "miocsv.h"
+#include "mio/stringreader.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -8,11 +9,33 @@ using miocsv::Row;
 
 int main()
 {
-    std::ifstream ist {"irregular.csv"};
-    if (ist)
+    // std::ifstream ist {"irregular.csv"};
+    // if (ist)
+    // {
+    //     // auto reader = miocsv::Reader(ist);
+    //     auto reader = miocsv::DictReader(ist);
+
+    //     // the order of headers is preserved as the input file
+    //     std::cout << "headers are: " << reader.get_fieldnames() << '\n';
+
+    //     // use range-for loop to print out the first 10 lines
+    //     for (const auto& line: reader)
+    //     {
+    //         auto row_num = reader.get_row_num();
+    //         std::cout << "line " << row_num  << ": " << line << '\n';
+
+    //         if (row_num > 10)
+    //             break;
+    //     }
+    // }
+
+    // use mio::StringReader.getline()
+    auto s {"test/regular.csv"};
+    mio::StringReader sr {s};
+
+    if (sr.is_mapped())
     {
-        // auto reader = miocsv::Reader(ist);
-        auto reader = miocsv::DictReader(ist);
+        auto reader = miocsv::DictReader(sr);
 
         // the order of headers is preserved as the input file
         std::cout << "headers are: " << reader.get_fieldnames() << '\n';
