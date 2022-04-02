@@ -1,7 +1,9 @@
 #ifndef GUARD_MIOCSV_H
 #define GUARD_MIOCSV_H
 
+#if (defined(USE_MIO) && __cplusplus > 202002L)
 #include "mio/stringreader.hpp"
+#endif
 
 #include <fstream>
 #include <iostream>
@@ -303,8 +305,13 @@ public:
 
     Reader() = delete;
 
+#if (defined(USE_MIO) && __cplusplus > 202002L)
+    Reader(mio::StringReader& sr_, const char delim_ = ',')
+        : sr {sr_}, delim {delim_}, quote {'"'}, row_num {0}
+#else
     Reader(std::ifstream& is_, const char delim_ = ',')
         : is {is_}, delim {delim_}, quote {'"'}, row_num {0}
+#endif
     {
     }
 
@@ -325,7 +332,11 @@ public:
     }
 
 protected:
+#if (defined(USE_MIO) && __cplusplus > 202002L)
+    mio::StringReader& sr;
+#else
     std::ifstream& is;
+#endif
     const char delim;
     const char quote;
     size_type row_num;
@@ -349,10 +360,16 @@ protected:
 
     virtual void iterate()
     {
+#if (defined(USE_MIO) && __cplusplus > 202002L)
+        std::string_view s;
+        if (!sr.getline())
+            throw IterationEnd();
+        std::cout << "use mio\n";
+#else
         std::string s;
         if (!std::getline(is, s))
             throw IterationEnd();
-
+#endif
         try
         {
             row = split2(s);
@@ -545,8 +562,13 @@ inline Reader::ReaderIterator Reader::end()
 
 class DictReader : public Reader {
 public:
+#if (defined(USE_MIO) && __cplusplus > 202002L)
+    DictReader(mio::StringReader& sr_, const Row& fieldnames_ = {}, const char delim_ = ',')
+        : Reader{sr_, delim_}
+#else
     DictReader(std::ifstream& is_, const Row& fieldnames_ = {}, const char delim_ = ',')
         : Reader{is_, delim_}
+#endif
     {
         setup_headers(fieldnames_);
     }

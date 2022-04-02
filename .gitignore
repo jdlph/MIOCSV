@@ -3,5 +3,7 @@
 *.gch
 *.out
 /demo
+miocsv.demo
 demo.dSYM
 output.csv
+build
