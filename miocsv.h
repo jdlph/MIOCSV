@@ -14,35 +14,44 @@ namespace miocsv
 using size_type = unsigned long;
 using FieldNames = std::map<std::string, size_type>;
 
-template <typename InputIt>
-class StringSpan {
+/**
+ * @brief a helper class to define a string range by [head, tail]
+ * 
+ * it is to mimic std::string_view but with capability in changing head and tail.
+ * we use it to avoid dynamic memory allocation (and deallocation) and copy in 
+ * string concatenation.
+ */
+template <typename T>
+class StringRange {
 public:
-    StringSpan() = delete;
+    using iterator = typename T::const_iterator;
+    
+    StringRange() = delete;
 
-    explicit StringSpan(const InputIt& it) : head {it}, tail {it}
+    explicit StringRange(iterator it) : head {it}, tail {it}
     {
     }
 
-    StringSpan(const StringSpan&) = delete;
-    StringSpan& operator=(const StringSpan&) = delete;
+    StringRange(const StringRange&) = delete;
+    StringRange& operator=(const StringRange&) = delete;
 
-    StringSpan(StringSpan&&) = delete;
-    StringSpan& operator=(StringSpan&&) = delete;
+    StringRange(StringRange&&) = delete;
+    StringRange& operator=(StringRange&&) = delete;
 
-    ~StringSpan() = default;
+    ~StringRange() = default;
 
     bool empty() const
     {
         return tail - head == 0;
     }
 
-    void extend(const InputIt& it)
+    void extend(iterator it)
     {
         // check it > tail?
         tail = it;
     }
 
-    void reset(const InputIt& it)
+    void reset(iterator it)
     {
         head = tail = it;
     }
@@ -53,8 +62,8 @@ public:
     }
 
 private:
-    InputIt head;
-    InputIt tail;
+    iterator head;
+    iterator tail;
 };
 
 class Row {
@@ -133,7 +142,7 @@ public:
         }
         catch (const std::out_of_range)
         {
-            throw std::string {s + " is not existing!"};
+            throw std::out_of_range{s + " is not existing!"};
         }
         catch (const std::exception& e)
         {
@@ -173,7 +182,7 @@ public:
         }
         catch (const std::out_of_range)
         {
-            throw std::string {s + " is not existing!"};
+            throw std::out_of_range{s + " is not existing!"};
         }
         catch (const std::exception& e)
         {
@@ -253,20 +262,16 @@ private:
 
     };
 
-    template<typename T>
-    void convert_to_string(const T& t)
+    template<typename T, typename... Args>
+    void convert_to_string(const T& t, const Args&... args)
     {
         std::ostringstream os;
         os << t;
         // os.str() will be moved into records as os.str() is a rvalue reference
         records.push_back(os.str());
-    }
-
-    template<typename T, typename... Args>
-    void convert_to_string(const T& t, const Args&... args)
-    {
-        convert_to_string(t);
-        convert_to_string(args...);
+        // it requires C++17
+        if constexpr(sizeof...(args) > 0)
+            convert_to_string(args...);
     }
 };
 
@@ -390,63 +395,19 @@ private:
         return r;
     }
 
-    Row split2(const std::string& s) const;
-    Row split2(std::string_view s) const;
+    template<typename T>
+    Row split2(const T& s) const;
 };
 
-Row Reader::split2(const std::string& s) const
+template<typename T>
+Row Reader::split2(const T& s) const
 {
     if (s.empty())
         return Row();
 
     bool quoted = false;
     auto b = s.begin();
-    StringSpan<std::string::const_iterator> ss{b};
-    Row r;
-
-    for (auto i = s.begin(), e = s.end(); i != e; ++i)
-    {
-        if (*i == quote)
-        {
-            quoted ^= true;
-            if (!quoted)
-            {
-                b = i + 1;
-                ss.extend(b);
-                if (*b != quote && *b != delim && b != e)
-                    throw InvalidRow(row_num, ss.to_string());
-            }
-        }
-        else if (*i == delim && !quoted)
-        {
-            if (!ss.empty())
-                r.append(ss.to_string());
-            else if (i > b)
-                r.append(std::string(b, i));
-
-            b = i + 1;
-            ss.reset(b);
-        }
-    }
-
-    // last one
-    if (!ss.empty())
-        r.append(ss.to_string());
-    else
-        r.append(std::string(b, s.end()));
-
-    // use move constructor to avoid copy
-    return r;
-}
-
-Row Reader::split2(std::string_view s) const
-{
-    if (s.empty())
-        return Row();
-
-    bool quoted = false;
-    auto b = s.begin();
-    StringSpan<const char*> ss{b};
+    StringRange<T> ss{b};
     Row r;
 
     for (auto i = s.begin(), e = s.end(); i != e; ++i)
