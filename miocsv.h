@@ -17,8 +17,6 @@ using FieldNames = std::map<std::string, size_type>;
 template <typename InputIt>
 class StringSpan {
 public:
-    // using iterator = std::string::const_iterator;
-
     StringSpan() = delete;
 
     explicit StringSpan(const InputIt& it) : head {it}, tail {it}
@@ -30,6 +28,8 @@ public:
 
     StringSpan(StringSpan&&) = delete;
     StringSpan& operator=(StringSpan&&) = delete;
+
+    ~StringSpan() = default;
 
     bool empty() const
     {
@@ -75,7 +75,7 @@ class Row {
 
         for (size_type i = 0, sz = r.size(); i != sz - 1; ++i)
             os << r.records[i] << ',';
-
+        // last one
         os << r.back();
 
         return os;
@@ -343,7 +343,7 @@ protected:
 
 private:
     // support double quotes
-    Row split(std::string& s) const
+    Row split(const std::string& s) const
     {
         if (s.empty())
             return Row();
@@ -390,18 +390,18 @@ private:
         return r;
     }
 
-    Row split2(std::string& s) const;
+    Row split2(const std::string& s) const;
     Row split2(std::string_view s) const;
 };
 
-Row Reader::split2(std::string& s) const
+Row Reader::split2(const std::string& s) const
 {
     if (s.empty())
         return Row();
 
     bool quoted = false;
     auto b = s.begin();
-    StringSpan<std::string::iterator> ss{b};
+    StringSpan<std::string::const_iterator> ss{b};
     Row r;
 
     for (auto i = s.begin(), e = s.end(); i != e; ++i)
@@ -721,7 +721,7 @@ std::ostream& operator<<(std::ostream& os, const miocsv::FieldNames& fns)
 
     for (miocsv::size_type i = 0, sz = vec.size() - 1; i != sz; ++i)
         os << vec[i].first << ',';
-
+    // last one
     os << vec.back().first;
 
     return os;
