@@ -522,7 +522,7 @@ public:
         {
             r->iterate();
         }
-        catch(IterationEnd)
+        catch (IterationEnd)
         {
             r = nullptr;
         }

@@ -30,7 +30,7 @@ int main()
     // }
 
     // use mio::StringReader.getline()
-    auto s {"test/regular.csv"};
+    auto s {"irregular.csv"};
     mio::StringReader sr {s};
 
     if (sr.is_mapped())

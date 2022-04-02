@@ -113,9 +113,9 @@ public:
     // at the end of file. The majority of the processing will be
     // for l_find != m_mmap.end(). So we give this hint to the compiler
     // for better branch prediction.
-    if (semi_branch_expect((l_find != m_mmap.end()), true)) {
+    if (l_find != m_mmap.end(), true) {
       m_begin = std::next(l_find);
-      return {l_begin, static_cast<size_t>(l_find - l_begin - 1)}; // '\n' excluded.
+      return {l_begin, static_cast<size_t>(l_find - l_begin)};
     } else {
       m_mmap.unmap();
       m_begin = nullptr;
