@@ -16,16 +16,16 @@ using FieldNames = std::map<std::string, size_type>;
 
 /**
  * @brief a helper class to define a string range by [head, tail]
- * 
+ *
  * it is to mimic std::string_view but with capability in changing head and tail.
- * we use it to avoid dynamic memory allocation (and deallocation) and copy in 
- * string concatenation.
+ * we use it to avoid potential dynamic memory allocation (and deallocation) and
+ * copy in string concatenation.
  */
-template <typename T>
+template <typename C>
 class StringRange {
 public:
-    using iterator = typename T::const_iterator;
-    
+    using iterator = typename C::const_iterator;
+
     StringRange() = delete;
 
     explicit StringRange(iterator it) : head {it}, tail {it}
@@ -120,11 +120,17 @@ public:
 
     std::string& operator[](size_type i)
     {
+        if (i >= records.size() || 0 > i)
+            throw std::out_of_range{std::to_string(i)};
+
         return records[i];
     }
 
     const std::string& operator[](size_type i) const
     {
+        if (i >= records.size() || 0 > i)
+            throw std::out_of_range{std::to_string(i)};
+
         return records[i];
     }
 
@@ -142,7 +148,7 @@ public:
         }
         catch (const std::out_of_range)
         {
-            throw std::out_of_range{s + " is not existing!"};
+            std::cerr << "std::out_of_range " << s << " is not existing!";
         }
         catch (const std::exception& e)
         {
@@ -182,7 +188,7 @@ public:
         }
         catch (const std::out_of_range)
         {
-            throw std::out_of_range{s + " is not existing!"};
+            std::cerr << "std::out_of_range " << s << " is not existing!";
         }
         catch (const std::exception& e)
         {
@@ -348,68 +354,22 @@ protected:
 
 private:
     // support double quotes
-    Row split(const std::string& s) const
-    {
-        if (s.empty())
-            return Row();
+    Row split(const std::string& s) const;
 
-        Row r;
-        std::string s1;
-
-        bool quoted = false;
-        auto b = s.begin();
-        for (auto i = s.begin(), e = s.end(); i != e; ++i)
-        {
-            if (*i == quote)
-            {
-                quoted ^= true;
-                if (!quoted)
-                {
-                    s1 += std::string(b, i + 1);
-                    b = i + 1;
-                    if (*b != quote && *b != delim && b != e)
-                        throw InvalidRow(row_num, s1);
-                }
-            }
-            else if (*i == delim && !quoted)
-            {
-                if (!s1.empty())
-                {
-                    r.append(s1);
-                    s1.clear();
-                }
-                else if (i > b)
-                    r.append(std::string(b, i));
-
-                b = i + 1;
-            }
-        }
-
-        // last one
-        if (!s1.empty())
-            r.append(s1);
-        else
-            r.append(std::string(b, s.end()));
-
-        // use move constructor to avoid copy
-        return r;
-    }
-
-    template<typename T>
-    Row split2(const T& s) const;
+    template<typename C>
+    Row split2(const C& c) const;
 };
 
-template<typename T>
-Row Reader::split2(const T& s) const
+Row Reader::split(const std::string& s) const
 {
     if (s.empty())
         return Row();
 
+    Row r;
+    std::string s1;
+
     bool quoted = false;
     auto b = s.begin();
-    StringRange<T> ss{b};
-    Row r;
-
     for (auto i = s.begin(), e = s.end(); i != e; ++i)
     {
         if (*i == quote)
@@ -417,29 +377,77 @@ Row Reader::split2(const T& s) const
             quoted ^= true;
             if (!quoted)
             {
+                s1 += std::string(b, i + 1);
                 b = i + 1;
-                ss.extend(b);
                 if (*b != quote && *b != delim && b != e)
-                    throw InvalidRow(row_num, ss.to_string());
+                    throw InvalidRow(row_num, s1);
             }
         }
         else if (*i == delim && !quoted)
         {
-            if (!ss.empty())
-                r.append(ss.to_string());
+            if (!s1.empty())
+            {
+                r.append(s1);
+                s1.clear();
+            }
             else if (i > b)
                 r.append(std::string(b, i));
 
             b = i + 1;
-            ss.reset(b);
         }
     }
 
     // last one
-    if (!ss.empty())
-        r.append(ss.to_string());
+    if (!s1.empty())
+        r.append(s1);
     else
         r.append(std::string(b, s.end()));
+
+    // use move constructor to avoid copy
+    return r;
+}
+
+template<typename C>
+Row Reader::split2(const C& c) const
+{
+    if (c.empty())
+        return Row();
+
+    bool quoted = false;
+    auto b = c.begin();
+    StringRange<C> sr{b};
+    Row r;
+
+    for (auto i = c.begin(), e = c.end(); i != e; ++i)
+    {
+        if (*i == quote)
+        {
+            quoted ^= true;
+            if (!quoted)
+            {
+                b = i + 1;
+                sr.extend(b);
+                if (*b != quote && *b != delim && b != e)
+                    throw InvalidRow(row_num, sr.to_string());
+            }
+        }
+        else if (*i == delim && !quoted)
+        {
+            if (!sr.empty())
+                r.append(sr.to_string());
+            else if (i > b)
+                r.append(std::string(b, i));
+
+            b = i + 1;
+            sr.reset(b);
+        }
+    }
+
+    // last one
+    if (!sr.empty())
+        r.append(sr.to_string());
+    else
+        r.append(std::string(b, c.end()));
 
     // use move constructor to avoid copy
     return r;
