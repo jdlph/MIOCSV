@@ -1,6 +1,8 @@
 #ifndef GUARD_MIOCSV_H
 #define GUARD_MIOCSV_H
 
+#include "mio/stringreader.hpp"
+
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -72,8 +74,9 @@ class Row {
         r.fieldnames = fieldnames_;
         if (r.fieldnames->size() != r.size())
         {
-            std::cout << "CAUTION: Data Inconsistency at line " + std::to_string(row_num) << ": "
-                      << r.fieldnames->size() << " fieldnames vs. " << r.size() << " fields\n";
+            std::cout << "CAUTION: Data Inconsistency at line " << row_num
+                      << ": " << r.fieldnames->size() << " fieldnames vs. " 
+                      << r.size() << " fields\n";
         }
     }
 
@@ -268,16 +271,29 @@ private:
 
     };
 
-    template<typename T, typename... Args>
-    void convert_to_string(const T& t, const Args&... args)
+    template<typename T>
+    void convert_to_string(const T& t)
     {
         std::ostringstream os;
         os << t;
         // os.str() will be moved into records as os.str() is a rvalue reference
         records.push_back(os.str());
+    }
+
+    template<typename T, typename... Args>
+    void convert_to_string(const T& t, const Args&... args)
+    {
+#if __cplusplus >= 201703L
+        std::ostringstream os;
+        os << t;
+        records.push_back(os.str());
         // it requires C++17
         if constexpr(sizeof...(args) > 0)
             convert_to_string(args...);
+#else
+        convert_to_string(t);
+        convert_to_string(args...);
+#endif
     }
 };
 
@@ -323,10 +339,10 @@ protected:
         InvalidRow() = delete;
 
         InvalidRow(size_type row_num, const std::string& str)
-            : std::runtime_error{std::string{"CAUTION: Invalid Row at line "
-                                             + std::to_string(row_num + 1)
-                                             + "! Any value after quoted field is not allowed:"
-                                             + " invalid field found after " + str}}
+            : std::runtime_error{"CAUTION: Invalid Row at line "
+                                 + std::to_string(row_num + 1)
+                                 + "! Any value after quoted field is not allowed:"
+                                 + " invalid field found after " + str}
         {
         }
     };
