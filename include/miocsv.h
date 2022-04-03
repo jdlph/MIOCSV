@@ -17,30 +17,29 @@ namespace miocsv
 class MIOReader : public virtual BaseReader {
 public:
     MIOReader()= delete;
-    
+
     MIOReader(const std::string& ms_, const char delim_ = ',')
-        : BaseReader{delim_}, ms {ms_}
+        : BaseReader{}, ms {ms_}, delim {delim_}
     {
         if (!ms.is_mapped())
             std::cerr << "invalid input!\n";
 
-        delim = delim_;
         it = ms.begin();
     }
 
     MIOReader(std::string&& ms_, const char delim_ = ',')
-        : BaseReader{delim_}, ms {ms_}
+        : BaseReader{}, ms {ms_}, delim {delim_}
     {
         if (!ms.is_mapped())
             std::cerr << "invalid input!\n";
 
-        delim = delim_;
         it = ms.begin();
     }
 
 protected:
     mio::mmap_source ms;
     const char* it;
+    const char delim;
 
     void iterate() override
     {
@@ -51,7 +50,7 @@ protected:
         {
             row = parse();
         }
-        catch(const InvalidRow& e)
+        catch (const InvalidRow& e)
         {
             std::cerr << e.what() << '\n';
             MIOReader::iterate();
@@ -70,7 +69,7 @@ private:
 class MIODictReader : public MIOReader, public BaseDictReader {
 public:
     MIODictReader() = delete;
-    
+
     MIODictReader(const std::string& ist_, const Row& fieldnames_ = {}, const char delim_ = ',')
         : MIOReader{ist_, delim_}, BaseDictReader{}
     {

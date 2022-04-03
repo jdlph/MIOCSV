@@ -304,9 +304,7 @@ class BaseReader {
 public:
     class ReaderIterator;
 
-    BaseReader() = default;
-
-    explicit BaseReader(const char delim_) : delim {delim_}
+    BaseReader() : quote {'"'}, row_num {0}
     {
     }
 
@@ -339,9 +337,8 @@ public:
     };
 
 protected:
-    char delim;
-    const char quote = '"';
-    size_type row_num = 0;
+    const char quote;
+    size_type row_num;
     Row row;
 
     class IterationEnd {
@@ -411,6 +408,7 @@ private:
     BaseReader* r;
 };
 
+// dreaded diamond
 class BaseDictReader : public virtual BaseReader {
 public:
     BaseDictReader() = default;
@@ -446,19 +444,20 @@ protected:
     FieldNames fieldnames;
 };
 
+// dreaded diamond
 class Reader : public virtual BaseReader {
 public:
     Reader() = delete;
-    
+
     Reader(const std::string& ist_, const char delim_ = ',')
-        : BaseReader{delim_}, ist {ist_}
+        : BaseReader{}, ist {ist_}, delim {delim_}
     {
         if (!ist)
             std::cerr << "invalid input!\n";
     }
 
     Reader(std::string&& ist_, const char delim_ = ',')
-        : BaseReader{delim_}, ist {ist_}
+        : BaseReader{}, ist {ist_}, delim {delim_}
     {
         if (!ist)
             std::cerr << "invalid input!\n";
@@ -466,6 +465,7 @@ public:
 
 protected:
     std::ifstream ist;
+    const char delim;
 
     void iterate() override
     {
@@ -499,19 +499,16 @@ private:
 class DictReader : public Reader, public BaseDictReader {
 public:
     DictReader() = delete;
-    
+
     DictReader(const std::string& ist_, const Row& fieldnames_ = {}, const char delim_ = ',')
         : Reader{ist_}, BaseDictReader{}
     {
-        // dreaded diamond
-        delim = delim_;
         setup_headers(fieldnames_);
     }
 
     DictReader(std::string&& ist_, const Row& fieldnames_ = {}, const char delim_ = ',')
         : Reader{ist_}, BaseDictReader{}
     {
-        delim = delim_;
         setup_headers(fieldnames_);
     }
 

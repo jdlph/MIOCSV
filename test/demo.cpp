@@ -11,7 +11,7 @@ int main()
     auto test_mioreader = true;
     auto test_writer = false;
 
-    auto inputfile = "/Users/jdlph/Dev/MIOCSV/test/irregular.csv";
+    auto inputfile = "irregular.csv";
 
     if (test_reader)
     {
