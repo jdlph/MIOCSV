@@ -14,14 +14,17 @@
 namespace miocsv
 {
 
-class MIOReader : public BaseReader {
+class MIOReader : public virtual BaseReader {
 public:
+    MIOReader()= delete;
+    
     MIOReader(const std::string& ms_, const char delim_ = ',')
         : BaseReader{delim_}, ms {ms_}
     {
         if (!ms.is_mapped())
             std::cerr << "invalid input!\n";
 
+        delim = delim_;
         it = ms.begin();
     }
 
@@ -31,6 +34,7 @@ public:
         if (!ms.is_mapped())
             std::cerr << "invalid input!\n";
 
+        delim = delim_;
         it = ms.begin();
     }
 
@@ -63,50 +67,23 @@ private:
     Row parse(const C& c) const;
 };
 
-class MIODictReader : public MIOReader {
+class MIODictReader : public MIOReader, public BaseDictReader {
 public:
+    MIODictReader() = delete;
+    
     MIODictReader(const std::string& ist_, const Row& fieldnames_ = {}, const char delim_ = ',')
-        : MIOReader{ist_, delim_}
+        : MIOReader{ist_, delim_}, BaseDictReader{}
     {
         setup_headers(fieldnames_);
     }
 
     MIODictReader(std::string&& ist_, const Row& fieldnames_ = {}, const char delim_ = ',')
-        : MIOReader{ist_, delim_}
+        : MIOReader{ist_, delim_}, BaseDictReader{}
     {
         setup_headers(fieldnames_);
     }
 
-    void setup_headers(const Row& r)
-    {
-        for (size_type i = 0, sz = r.size(); i != sz; ++i)
-        {
-            const auto& s = r[i];
-            fieldnames[s] = i;
-        }
-
-        if (fieldnames.empty() && row_num == 0)
-        {
-            try
-            {
-                iterate();
-                setup_headers(row);
-            }
-            catch (IterationEnd)
-            {
-                return;
-            }
-        }
-    }
-
-    const FieldNames& get_fieldnames() const
-    {
-        return fieldnames;
-    }
-
 private:
-    FieldNames fieldnames;
-
     void iterate() override
     {
         MIOReader::iterate();

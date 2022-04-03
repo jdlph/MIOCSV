@@ -304,10 +304,9 @@ class BaseReader {
 public:
     class ReaderIterator;
 
-    BaseReader() = delete;
+    BaseReader() = default;
 
-    BaseReader(const char delim_)
-        : delim {delim_}, quote {'"'}, row_num {0}
+    explicit BaseReader(const char delim_) : delim {delim_}
     {
     }
 
@@ -340,9 +339,9 @@ public:
     };
 
 protected:
-    const char delim;
-    const char quote;
-    size_type row_num;
+    char delim;
+    const char quote = '"';
+    size_type row_num = 0;
     Row row;
 
     class IterationEnd {
@@ -412,8 +411,45 @@ private:
     BaseReader* r;
 };
 
-class Reader : public BaseReader {
+class BaseDictReader : public virtual BaseReader {
 public:
+    BaseDictReader() = default;
+
+    void setup_headers(const Row& r)
+    {
+        for (size_type i = 0, sz = r.size(); i != sz; ++i)
+        {
+            const auto& s = r[i];
+            fieldnames[s] = i;
+        }
+
+        if (fieldnames.empty() && row_num == 0)
+        {
+            try
+            {
+                iterate();
+                setup_headers(row);
+            }
+            catch (IterationEnd)
+            {
+                return;
+            }
+        }
+    }
+
+    const FieldNames& get_fieldnames() const
+    {
+        return fieldnames;
+    }
+
+protected:
+    FieldNames fieldnames;
+};
+
+class Reader : public virtual BaseReader {
+public:
+    Reader() = delete;
+    
     Reader(const std::string& ist_, const char delim_ = ',')
         : BaseReader{delim_}, ist {ist_}
     {
@@ -460,50 +496,26 @@ private:
     Row split2(const C& c) const;
 };
 
-class DictReader : public Reader {
+class DictReader : public Reader, public BaseDictReader {
 public:
+    DictReader() = delete;
+    
     DictReader(const std::string& ist_, const Row& fieldnames_ = {}, const char delim_ = ',')
-        : Reader{ist_, delim_}
+        : Reader{ist_}, BaseDictReader{}
     {
+        // dreaded diamond
+        delim = delim_;
         setup_headers(fieldnames_);
     }
 
     DictReader(std::string&& ist_, const Row& fieldnames_ = {}, const char delim_ = ',')
-        : Reader{ist_, delim_}
+        : Reader{ist_}, BaseDictReader{}
     {
+        delim = delim_;
         setup_headers(fieldnames_);
     }
 
-    void setup_headers(const Row& r)
-    {
-        for (size_type i = 0, sz = r.size(); i != sz; ++i)
-        {
-            const auto& s = r[i];
-            fieldnames[s] = i;
-        }
-
-        if (fieldnames.empty() && row_num == 0)
-        {
-            try
-            {
-                iterate();
-                setup_headers(row);
-            }
-            catch (IterationEnd)
-            {
-                return;
-            }
-        }
-    }
-
-    const FieldNames& get_fieldnames() const
-    {
-        return fieldnames;
-    }
-
 private:
-    FieldNames fieldnames;
-
     void iterate() override
     {
         Reader::iterate();
