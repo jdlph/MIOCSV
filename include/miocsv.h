@@ -117,6 +117,11 @@ public:
         convert_to_string(t, args...);
     }
 
+    Row(Records&& r)
+    {
+        records = r;
+    }
+
     Row(const Row&) = default;
     Row& operator=(const Row&) = delete;
 
@@ -366,7 +371,7 @@ protected:
         if (sr.eof())
             throw IterationEnd();
         
-        std::string_view s = sr.getline();
+        // std::string_view s = sr.getline();
 #else
         std::string s;
         if (!std::getline(is, s))
@@ -374,7 +379,8 @@ protected:
 #endif
         try
         {
-            row = split2(s);
+            // row = split2(s);
+            row = sr.parse();
         }
         catch (const InvalidRow& e)
         {
@@ -385,6 +391,8 @@ protected:
         }
 
         ++row_num;
+        if (row_num == 10)
+            std::cout << "check\n";
     }
 
 private:

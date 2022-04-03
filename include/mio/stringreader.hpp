@@ -22,6 +22,8 @@
 
 #include <mio/mio.hpp>
 
+#include <vector>
+
 #ifdef __GNUC__
 #define semi_branch_expect(x, y) __builtin_expect(x, y)
 #else
@@ -123,6 +125,67 @@ public:
 
     return {l_begin, static_cast<size_t>(l_find - l_begin)};
   }
+
+  std::vector<std::string> parse(const char quote = '"', const char delim = ',')
+  {
+    std::vector<std::string> vec;
+
+    if (*m_begin == '\n')
+    {
+      ++m_begin;
+      return vec;
+    }
+
+    std::string s1;
+    const char *l_begin = m_begin;
+    auto b = l_begin;
+    auto quoted = false;
+    
+    while (*l_begin != '\n' && semi_branch_expect((l_begin != m_mmap.end()), true))
+    {
+      if (*l_begin == quote)
+      {
+        quoted ^= true;
+        if (!quoted)
+        {
+          s1.append(std::string(b, l_begin + 1));
+          b = l_begin + 1;
+          if (*b != quote && *b != delim && *b != '\n')
+          {
+            l_begin = std::find(l_begin, m_mmap.end(), '\n');
+            break;
+          }
+        }
+      }
+      else if (*l_begin == delim && !quoted)
+      {
+        if (!s1.empty())
+        {
+          vec.emplace_back(s1);
+          s1.clear();
+        }
+        else if (l_begin > b)
+          vec.emplace_back(std::string(b, l_begin));
+
+        b = l_begin + 1;
+      }
+      ++l_begin;
+    }
+
+    // last one
+    if (!s1.empty())
+      vec.emplace_back(s1);
+    else
+      vec.emplace_back(std::string(b, l_begin));
+
+    if (semi_branch_expect((l_begin != m_mmap.end()), true))
+      m_begin = l_begin + 1;
+    else
+      m_begin = nullptr;
+
+    return vec;
+  }
+
 private:
   mmap_source m_mmap;
   const char *m_begin;
