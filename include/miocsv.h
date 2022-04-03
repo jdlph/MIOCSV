@@ -73,13 +73,13 @@ private:
 };
 
 class Row {
-    friend void attach_fieldnames(Row& r, const FieldNames* fieldnames_, size_type row_num)
+    friend void attach_fieldnames(Row& r, const FieldNames* fns, size_type row_num)
     {
-        r.fieldnames = fieldnames_;
+        r.fieldnames = fns;
         if (r.fieldnames->size() != r.size())
         {
             std::cout << "CAUTION: Data Inconsistency at line " << row_num
-                      << ": " << r.fieldnames->size() << " fieldnames vs. " 
+                      << ": " << r.fieldnames->size() << " fieldnames vs. "
                       << r.size() << " fields\n";
         }
     }
@@ -338,6 +338,18 @@ public:
         return row_num;
     }
 
+    struct InvalidRow : public std::runtime_error {
+        InvalidRow() = delete;
+
+        InvalidRow(size_type row_num, const std::string& str)
+            : std::runtime_error{"CAUTION: Invalid Row at line "
+                                 + std::to_string(row_num + 1)
+                                 + "! Any value after quoted field is not allowed:"
+                                 + " invalid field found after " + str}
+        {
+        }
+    };
+
 protected:
 #ifdef USE_MIO
     mio::StringReader& sr;
@@ -353,24 +365,12 @@ protected:
 
     };
 
-    struct InvalidRow : public std::runtime_error {
-        InvalidRow() = delete;
-
-        InvalidRow(size_type row_num, const std::string& str)
-            : std::runtime_error{"CAUTION: Invalid Row at line "
-                                 + std::to_string(row_num + 1)
-                                 + "! Any value after quoted field is not allowed:"
-                                 + " invalid field found after " + str}
-        {
-        }
-    };
-
     virtual void iterate()
     {
 #ifdef USE_MIO
         if (sr.eof())
             throw IterationEnd();
-        
+
         // std::string_view s = sr.getline();
 #else
         std::string s;
@@ -380,7 +380,7 @@ protected:
         try
         {
             // row = split2(s);
-            row = sr.parse();
+            row = sr.parse(row_num);
         }
         catch (const InvalidRow& e)
         {
@@ -456,7 +456,7 @@ Row Reader::split2(const C& c) const
 
     auto b = c.begin();
     StringRange<C> sr{b};
-    
+
     Row r;
     auto quoted = false;
 
@@ -744,7 +744,7 @@ std::ostream& operator<<(std::ostream& os, const miocsv::FieldNames& fns)
 }
 
 #ifdef USE_MIO
-std::vector<std::string> mio::StringReader::parse(const char quote, const char delim)
+std::vector<std::string> mio::StringReader::parse(miocsv::size_type row_num, const char quote, const char delim)
 {
     std::vector<std::string> vec;
     if (*m_begin == '\n')
@@ -770,7 +770,8 @@ std::vector<std::string> mio::StringReader::parse(const char quote, const char d
                 if (*b != quote && *b != delim && *b != '\n')
                 {
                     i = std::find(i, m_mmap.end(), '\n');
-                    break;
+                    m_begin = i + 1;
+                    throw miocsv::Reader::InvalidRow(row_num, sr.to_string());
                 }
             }
         }

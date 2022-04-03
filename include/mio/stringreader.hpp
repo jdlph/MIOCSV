@@ -22,8 +22,6 @@
 
 #include <mio/mio.hpp>
 
-#include <vector>
-
 #ifdef __GNUC__
 #define semi_branch_expect(x, y) __builtin_expect(x, y)
 #else
@@ -38,7 +36,7 @@ namespace mio {
 
    Example:
 
-     std::filesystem::path file_path = std::filesystem::current_path()/"test.txt"; 
+     std::filesystem::path file_path = std::filesystem::current_path()/"test.txt";
      assert(std::filesystem::exists(file_path));
      mio::StringReader reader(file_path.string());
 
@@ -119,14 +117,14 @@ public:
     // for l_find != m_mmap.end(). So we give this hint to the compiler
     // for better branch prediction.
     if (semi_branch_expect((l_find != m_mmap.end()), true))
-      m_begin = std::next(l_find);  
+      m_begin = std::next(l_find);
     else
       m_begin = nullptr;
 
     return {l_begin, static_cast<size_t>(l_find - l_begin)};
   }
 
-  std::vector<std::string> parse(const char quote = '"', const char delim = ',');
+  std::vector<std::string> parse(unsigned long, const char quote = '"', const char delim = ',');
 
 private:
   mmap_source m_mmap;
