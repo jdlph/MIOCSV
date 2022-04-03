@@ -412,20 +412,6 @@ private:
     BaseReader* r;
 };
 
-inline BaseReader::ReaderIterator BaseReader::begin()
-{
-    // just in case users retrieve it after iteration starts
-    if (this->row_num > 1)
-        return nullptr;
-
-    return ReaderIterator(this);
-}
-
-inline BaseReader::ReaderIterator BaseReader::end()
-{
-    return nullptr;
-}
-
 class Reader : public BaseReader {
 public:
     Reader(const std::string& ist_, const char delim_ = ',')
@@ -473,100 +459,6 @@ private:
     template<typename C>
     Row split2(const C& c) const;
 };
-
-Row Reader::split(const std::string& s) const
-{
-    if (s.empty())
-        return Row();
-
-    Row r;
-    std::string s1;
-
-    auto quoted = false;
-    auto b = s.begin();
-    for (auto i = s.begin(), e = s.end(); i != e; ++i)
-    {
-        if (*i == quote)
-        {
-            quoted ^= true;
-            if (!quoted)
-            {
-                s1 += std::string(b, i + 1);
-                b = i + 1;
-                if (*b != quote && *b != delim && b != e)
-                    throw InvalidRow(row_num, s1);
-            }
-        }
-        else if (*i == delim && !quoted)
-        {
-            if (!s1.empty())
-            {
-                r.append(s1);
-                s1.clear();
-            }
-            else if (i > b)
-                r.append(std::string(b, i));
-
-            b = i + 1;
-        }
-    }
-
-    // last one
-    if (!s1.empty())
-        r.append(s1);
-    else
-        r.append(std::string(b, s.end()));
-
-    // use move constructor to avoid copy
-    return r;
-}
-
-template<typename C>
-Row Reader::split2(const C& c) const
-{
-    if (c.empty())
-        return Row();
-
-    auto b = c.begin();
-    StringRange<C> sr{b};
-
-    Row r;
-    auto quoted = false;
-
-    for (auto i = c.begin(), e = c.end(); i != e; ++i)
-    {
-        if (*i == quote)
-        {
-            quoted ^= true;
-            if (!quoted)
-            {
-                b = i + 1;
-                sr.extend(b);
-                if (*b != quote && *b != delim && b != e)
-                    throw InvalidRow(row_num, sr.to_string());
-            }
-        }
-        else if (*i == delim && !quoted)
-        {
-            if (!sr.empty())
-                r.append(sr.to_string());
-            else if (i > b)
-                r.append(std::string(b, i));
-
-            b = i + 1;
-            sr.reset(b);
-        }
-    }
-
-    // last one
-    if (!sr.empty())
-        r.append(sr.to_string());
-    else
-        r.append(std::string(b, c.end()));
-
-    // use move constructor to avoid copy
-    return r;
-}
 
 class DictReader : public Reader {
 public:
@@ -703,30 +595,113 @@ private:
     const char delim;
 };
 
-// some helper functions
-std::fstream open_csv(const std::string& filename, const char mode = 'r')
+// implementations
+inline BaseReader::ReaderIterator BaseReader::begin()
 {
-    std::fstream fs;
+    // just in case users retrieve it after iteration starts
+    if (this->row_num > 1)
+        return nullptr;
 
-    const char mode_ = std::tolower(mode);
-    switch (mode_)
+    return ReaderIterator(this);
+}
+
+inline BaseReader::ReaderIterator BaseReader::end()
+{
+    return nullptr;
+}
+
+Row Reader::split(const std::string& s) const
+{
+    if (s.empty())
+        return Row();
+
+    Row r;
+    std::string s1;
+
+    auto quoted = false;
+    auto b = s.begin();
+    for (auto i = s.begin(), e = s.end(); i != e; ++i)
     {
-        case 'r':
+        if (*i == quote)
         {
-            fs.open(filename, std::ios_base::in);
-            if (fs)
-                return fs;
+            quoted ^= true;
+            if (!quoted)
+            {
+                s1 += std::string(b, i + 1);
+                b = i + 1;
+                if (*b != quote && *b != delim && b != e)
+                    throw InvalidRow(row_num, s1);
+            }
         }
-        case 'w':
+        else if (*i == delim && !quoted)
         {
-            fs.open(filename, std::ios_base::out);
-            if (fs)
-                return fs;
+            if (!s1.empty())
+            {
+                r.append(s1);
+                s1.clear();
+            }
+            else if (i > b)
+                r.append(std::string(b, i));
+
+            b = i + 1;
         }
-        default:
-            std::cout << "please provide the right mode: 'r' for read or 'w' for write\n";
-            break;
     }
+
+    // last one
+    if (!s1.empty())
+        r.append(s1);
+    else
+        r.append(std::string(b, s.end()));
+
+    // use move constructor to avoid copy
+    return r;
+}
+
+template<typename C>
+Row Reader::split2(const C& c) const
+{
+    if (c.empty())
+        return Row();
+
+    auto b = c.begin();
+    StringRange<C> sr{b};
+
+    Row r;
+    auto quoted = false;
+
+    for (auto i = c.begin(), e = c.end(); i != e; ++i)
+    {
+        if (*i == quote)
+        {
+            quoted ^= true;
+            if (!quoted)
+            {
+                b = i + 1;
+                sr.extend(b);
+                if (*b != quote && *b != delim && b != e)
+                    throw InvalidRow(row_num, sr.to_string());
+            }
+        }
+        else if (*i == delim && !quoted)
+        {
+            if (!sr.empty())
+                r.append(sr.to_string());
+            else if (i > b)
+                r.append(std::string(b, i));
+
+            b = i + 1;
+            sr.reset(b);
+        }
+    }
+
+    // last one
+    if (!sr.empty())
+        r.append(sr.to_string());
+    else
+        r.append(std::string(b, c.end()));
+
+    // use move constructor to avoid copy
+    return r;
 }
 
 } // namespace miocsv
