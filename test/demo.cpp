@@ -45,9 +45,6 @@ int main()
         {
             auto row_num = reader.get_row_num();
             std::cout << "line " << row_num  << ": " << line << '\n';
-
-            if (row_num > 10)
-                break;
         }
     }
 

@@ -75,7 +75,10 @@ public:
   StringReader &operator=(StringReader &) = delete;
   StringReader &operator=(StringReader &&) = delete;
 
-  ~StringReader() = default;
+  ~StringReader()
+  {
+    m_mmap.unmap();
+  }
 
   /**
      Checks whether the reader has reached end of file.
@@ -113,14 +116,12 @@ public:
     // at the end of file. The majority of the processing will be
     // for l_find != m_mmap.end(). So we give this hint to the compiler
     // for better branch prediction.
-    if (l_find != m_mmap.end(), true) {
-      m_begin = std::next(l_find);
-      return {l_begin, static_cast<size_t>(l_find - l_begin)};
-    } else {
-      m_mmap.unmap();
+    if (semi_branch_expect((l_find != m_mmap.end()), true))
+      m_begin = std::next(l_find);  
+    else
       m_begin = nullptr;
-      return {nullptr, 0};
-    }
+
+    return {l_begin, static_cast<size_t>(l_find - l_begin)};
   }
 private:
   mmap_source m_mmap;
