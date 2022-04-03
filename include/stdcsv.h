@@ -420,7 +420,7 @@ public:
         if (!ist)
             std::cerr << "invalid input!\n";
     }
-    
+
     Reader(std::string&& ist_, const char delim_ = ',')
         : BaseReader{delim_}, ist {ist_}
     {
@@ -467,7 +467,7 @@ public:
     {
         setup_headers(fieldnames_);
     }
-    
+
     DictReader(std::string&& ist_, const Row& fieldnames_ = {}, const char delim_ = ',')
         : Reader{ist_, delim_}
     {
@@ -520,14 +520,14 @@ class Writer {
 public:
     Writer() = delete;
 
-    Writer(const std::string& ost_, const char delim_ = ',') 
+    Writer(const std::string& ost_, const char delim_ = ',')
         : ost {ost_}, delim {delim_}
     {
         if (!ost)
             std::cerr << "invalid input!\n";
     }
-    
-    Writer(std::string&& ost_, const char delim_ = ',') 
+
+    Writer(std::string&& ost_, const char delim_ = ',')
         : ost {ost_}, delim {delim_}
     {
         if (!ost)

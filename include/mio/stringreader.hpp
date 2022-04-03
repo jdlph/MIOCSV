@@ -124,8 +124,6 @@ public:
     return {l_begin, static_cast<size_t>(l_find - l_begin)};
   }
 
-  std::vector<std::string> parse(unsigned long, const char quote = '"', const char delim = ',');
-
 private:
   mmap_source m_mmap;
   const char *m_begin;

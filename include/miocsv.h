@@ -11,7 +11,7 @@
 #define semi_branch_expect(x, y) x
 #endif
 
-namespace miocsv 
+namespace miocsv
 {
 
 class MIOReader : public BaseReader {
@@ -21,17 +21,21 @@ public:
     {
         if (!ms.is_mapped())
             std::cerr << "invalid input!\n";
+
+        it = ms.begin();
     }
-    
+
     MIOReader(std::string&& ms_, const char delim_ = ',')
         : BaseReader{delim_}, ms {ms_}
     {
         if (!ms.is_mapped())
             std::cerr << "invalid input!\n";
+
+        it = ms.begin();
     }
 
 protected:
-    mio::mmap_source ms;  
+    mio::mmap_source ms;
     const char* it;
 
     void iterate() override
@@ -48,13 +52,13 @@ protected:
             std::cerr << e.what() << '\n';
             MIOReader::iterate();
         }
-        
+
         ++row_num;
     }
 
 private:
     Row parse();
-    
+
     template<typename C>
     Row parse(const C& c) const;
 };
@@ -66,7 +70,7 @@ public:
     {
         setup_headers(fieldnames_);
     }
-    
+
     MIODictReader(std::string&& ist_, const Row& fieldnames_ = {}, const char delim_ = ',')
         : MIOReader{ist_, delim_}
     {
@@ -128,7 +132,7 @@ Row MIOReader::parse()
     auto i = it;
     auto b = it;
     miocsv::StringRange<std::string_view> sr{b};
-    
+
     Row r;
     auto quoted = false;
 
@@ -177,66 +181,5 @@ Row MIOReader::parse()
 }
 
 } // namespace miocsv
-
-
-#ifdef USE_MIO
-std::vector<std::string> mio::StringReader::parse(miocsv::size_type row_num, const char quote, const char delim)
-{
-    std::vector<std::string> vec;
-    if (*m_begin == '\n')
-    {
-        ++m_begin;
-        return vec;
-    }
-
-    auto quoted = false;
-    auto i = m_begin;
-    auto b = m_begin;
-    miocsv::StringRange<std::string_view> sr{b};
-
-    while (*i != '\n' && semi_branch_expect((i != m_mmap.end()), true))
-    {
-        if (*i == quote)
-        {
-            quoted ^= true;
-            if (!quoted)
-            {
-                b = i + 1;
-                sr.extend(b);
-                if (*b != quote && *b != delim && *b != '\n')
-                {
-                    i = std::find(i, m_mmap.end(), '\n');
-                    m_begin = i + 1;
-                    throw miocsv::Reader::InvalidRow(row_num, sr.to_string());
-                }
-            }
-        }
-        else if (*i == delim && !quoted)
-        {
-            if (!sr.empty())
-                vec.emplace_back(sr.to_string());
-            else if (i > b)
-                vec.emplace_back(std::string(b, i));
-
-            b = i + 1;
-            sr.reset(b);
-        }
-        ++i;
-    }
-
-    // last one
-    if (!sr.empty())
-        vec.emplace_back(sr.to_string());
-    else
-        vec.emplace_back(std::string(b, i));
-
-    if (semi_branch_expect((i != m_mmap.end()), true))
-        m_begin = i + 1;
-    else
-        m_begin = nullptr;
-
-    return vec;
-}
-#endif
 
 #endif

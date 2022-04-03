@@ -5,16 +5,14 @@
 #include <iostream>
 #include <string>
 
-using miocsv::Row;
-
 int main()
 {
     auto test_reader = false;
     auto test_mioreader = true;
     auto test_writer = false;
-    
+
     auto inputfile = "/Users/jdlph/Dev/MIOCSV/test/irregular.csv";
-    
+
     if (test_reader)
     {
         // auto reader = miocsv::Reader(inputfile);
@@ -36,8 +34,9 @@ int main()
 
     if (test_mioreader)
     {
-        auto mioreader = miocsv::MIOReader(inputfile);
-        // std::cout << "headers are: " << mioreader.get_fieldnames() << '\n';
+        // auto mioreader = miocsv::MIOReader(inputfile);
+        auto mioreader = miocsv::MIODictReader(inputfile);
+        std::cout << "headers are: " << mioreader.get_fieldnames() << '\n';
 
         for (const auto& line: mioreader)
         {
@@ -51,8 +50,8 @@ int main()
         auto outputfile {"output.csv"};
         auto writer = miocsv::Writer(outputfile);
         // construct a dedicate record to be written using Row
-        Row r = {"first way to write a record include string, int, and double",
-                    "sting", 1, 1.1};
+        miocsv::Row r = {"first way to write a record include string, int, and double",
+                         "sting", 1, 1.1};
         writer.write_row(r);
         // or simply place a record to be written directly into write_row()
         writer.write_row({"second way to write a record", "string", 2, 2.0});
