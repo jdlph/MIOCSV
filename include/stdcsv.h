@@ -306,7 +306,7 @@ public:
 
     BaseReader() = delete;
 
-    BaseReader(const char delim_ = ',')
+    BaseReader(const char delim_)
         : delim {delim_}, quote {'"'}, row_num {0}
     {
     }
@@ -349,7 +349,7 @@ protected:
 
     };
 
-    virtual void iterate();
+    virtual void iterate() = 0;
 };
 
 class BaseReader::ReaderIterator {

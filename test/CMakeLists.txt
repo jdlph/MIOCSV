@@ -2,10 +2,6 @@ cmake_minimum_required (VERSION 3.8)
 
 project ("miocsv")
 
-option(USE_MIO "use mio::StringReader.getline() or not" ON)
-
-configure_file(build_config.h.in build_config.h)
-
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
