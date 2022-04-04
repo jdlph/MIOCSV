@@ -8,5 +8,3 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 add_executable(miocsv.demo demo.cpp)
 
 include_directories(../include)
-
-target_include_directories(miocsv.demo PUBLIC "${PROJECT_BINARY_DIR}")

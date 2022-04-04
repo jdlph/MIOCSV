@@ -300,10 +300,9 @@ private:
     }
 };
 
+// not a pure abstract class
 class BaseReader {
 public:
-    class ReaderIterator;
-
     BaseReader() : quote {'"'}, row_num {0}
     {
     }
@@ -314,7 +313,12 @@ public:
     BaseReader(BaseReader&&) = default;
     BaseReader& operator=(BaseReader&&) = delete;
 
-    ~BaseReader() = default;
+    virtual ~BaseReader()
+    {
+    }
+
+    // forward declaration
+    class ReaderIterator;
 
     ReaderIterator begin();
     ReaderIterator end();

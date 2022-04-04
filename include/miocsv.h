@@ -3,7 +3,6 @@
 
 #include "stdcsv.h"
 #include "mio/mio.hpp"
-#include "mio/stringreader.hpp"
 
 #ifdef __GNUC__
 #define semi_branch_expect(x, y) __builtin_expect(x, y)
@@ -16,7 +15,7 @@ namespace miocsv
 
 class MIOReader : public virtual BaseReader {
 public:
-    MIOReader()= delete;
+    MIOReader() = delete;
 
     MIOReader(const std::string& ms_, const char delim_ = ',')
         : BaseReader{}, ms {ms_}, delim {delim_}
@@ -36,14 +35,19 @@ public:
         it = ms.begin();
     }
 
+    ~MIOReader()
+    {
+        ms.unmap();
+    }
+
 protected:
     mio::mmap_source ms;
-    const char* it;
     const char delim;
+    const char* it;
 
     void iterate() override
     {
-        if (it == nullptr)
+        if (!it)
             throw IterationEnd{};
 
         try
@@ -61,9 +65,6 @@ protected:
 
 private:
     Row parse();
-
-    template<typename C>
-    Row parse(const C& c) const;
 };
 
 class MIODictReader : public MIOReader, public BaseDictReader {
