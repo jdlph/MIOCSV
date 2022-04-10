@@ -56,13 +56,13 @@ For a file with N chars, this implementation involves two almost identical linea
 
 There are several data copy operations going around with this implementation as illustrated by the following figure.
 
-![Regular CSV Parser](pic\regular1.png)
+![Regular CSV Parser](pic/regular1.png)
 
 The last one can be avoided by passing the container as a pointer or a reference on the heap memory, e.g., [CSVparser](https://github.com/rsylvian/CSVparser). However, it might impose additional risk of memory leak and slow down the performance.
 
 C++11 introduced moving semantics, which can helps us bypass it as well as Copy 4 without these two side effects.
 
-![Our Regular CSV Parser](pic\regular2.png)
+![Our Regular CSV Parser](pic/regular2.png)
 
 Note that the string involved in copy 2 and copy 3 does nothing but only serves an intermediate media from buffered chars and the parsed substrings. Once its substrings are parsed, it becomes useless, and will be discarded while we are moving to the next line.
 
@@ -72,7 +72,7 @@ We can either build a customer string range type or simply adopt std::string_vie
 
 With memory mapping presented before, the first copy operation is dropped as well. At this point, it leaves us with one and only one copy directly from chars in the file to the parsed substrings in conjunction with the single linear search.
 
-![Our MIO-Based CSV Parser](pic\mio.png)
+![Our MIO-Based CSV Parser](pic/mio.png)
 
 ## Acknowledgement
 1. [mio::StringReader.getline()](https://github.com/wxinix/wxlib/blob/main/mio/include/mio/stringreader.hpp) is created by Dr. Wuping Xin. Thanks to him for making this master piece!
