@@ -10,7 +10,6 @@
 
 namespace miocsv
 {
-
 using size_type = unsigned long;
 using FieldNames = std::map<std::string, size_type>;
 
@@ -718,7 +717,6 @@ Row Reader::split2(const C& c) const
 }
 
 } // namespace miocsv
-
 
 std::ostream& operator<<(std::ostream& os, const miocsv::FieldNames& fns)
 {

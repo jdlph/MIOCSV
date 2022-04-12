@@ -1,52 +1,30 @@
 #include "stdcsv.h"
 #include "miocsv.h"
 
-enum TestCases {std_reader, std_dictreader, mio_reader, mio_dictreader, writer};
+#include <iostream>
 
-void test_Reader();
-void test_DictReader();
-void test_MioReader();
-void test_MioDictReader();
-void test_Writer();
-void test(TestCases& tc);
+enum DemoCases {std_reader, std_dictreader, mio_reader, mio_dictreader, writer};
+
+void demo_Reader();
+void demo_DictReader();
+void demo_MIOReader();
+void demo_MIODictReader();
+void demo_Writer();
+void demo(DemoCases& tc);
 
 int main()
 {
-    TestCases tc {std_reader};
-    test(tc);
+    DemoCases tc {std_reader};
+    demo(tc);
 
-    std::cout << "test done!\n";
+    std::cout << "demo done!\n";
 
     return 0;
 }
 
-void test(TestCases& tc)
+void demo_Reader()
 {
-    switch (tc)
-    {
-    case std_reader:
-        test_Reader();
-
-    case std_dictreader:
-        test_DictReader();
-
-    case mio_reader:
-        test_MioReader();
-
-    case mio_dictreader:
-        test_MioDictReader();
-
-    case writer:
-        test_Writer();
-
-    default:
-        break;
-    }
-}
-
-void test_Reader()
-{
-    auto inputfile {"irregular.csv"};
+    auto inputfile {"regular.csv"};
     auto reader = miocsv::Reader(inputfile);
 
     // use range-for loop to print out the first 10 lines
@@ -60,9 +38,9 @@ void test_Reader()
     }
 }
 
-void test_DictReader()
+void demo_DictReader()
 {
-    auto inputfile {"irregular.csv"};
+    auto inputfile {"regular.csv"};
     auto reader = miocsv::DictReader(inputfile);
 
     // the order of headers is preserved as the input file
@@ -79,9 +57,9 @@ void test_DictReader()
     }
 }
 
-void test_MioReader()
+void demo_MIOReader()
 {
-    auto inputfile {"irregular.csv"};
+    auto inputfile {"regular.csv"};
     auto mioreader = miocsv::MIOReader(inputfile);
 
     for (const auto& line: mioreader)
@@ -91,9 +69,9 @@ void test_MioReader()
     }
 }
 
-void test_MioDictReader()
+void demo_MIODictReader()
 {
-    auto inputfile {"irregular.csv"};
+    auto inputfile {"regular.csv"};
     auto mioreader = miocsv::MIODictReader(inputfile);
 
     std::cout << "headers are: " << mioreader.get_fieldnames() << '\n';
@@ -105,7 +83,7 @@ void test_MioDictReader()
     }
 }
 
-void test_Writer()
+void demo_Writer()
 {
     auto outputfile {"output.csv"};
     auto writer = miocsv::Writer(outputfile);
@@ -117,4 +95,33 @@ void test_Writer()
 
     // second way: simply place a record to be written directly into write_row()
     writer.write_row({"second way to write a record", "string", 2, 2.0});
+}
+
+void demo(DemoCases& tc)
+{
+    switch (tc)
+    {
+    case std_reader:
+        demo_Reader();
+        break;
+
+    case std_dictreader:
+        demo_DictReader();
+        break;
+
+    case mio_reader:
+        demo_MIOReader();
+        break;
+
+    case mio_dictreader:
+        demo_MIODictReader();
+        break;
+
+    case writer:
+        demo_Writer();
+        break;
+
+    default:
+        break;
+    }
 }

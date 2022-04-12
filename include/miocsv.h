@@ -12,7 +12,6 @@
 
 namespace miocsv
 {
-
 class MIOReader : public virtual BaseReader {
 public:
     MIOReader() = delete;
