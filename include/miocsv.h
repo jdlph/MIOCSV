@@ -46,6 +46,7 @@ protected:
 
     void iterate() override
     {
+        // it == nullptr, EOF is reached
         if (!it)
             throw IterationEnd{};
 
@@ -107,7 +108,7 @@ Row MIOReader::parse()
 
     auto i = it;
     auto b = it;
-    miocsv::StringRange<std::string_view> sr{b};
+    StringRange<std::string_view> sr{b};
 
     Row r;
     auto quoted = false;
@@ -125,7 +126,7 @@ Row MIOReader::parse()
                 {
                     i = std::find(i, ms.end(), lineter);
                     it = i + 1;
-                    throw miocsv::Reader::InvalidRow(row_num, sr.to_string());
+                    throw Reader::InvalidRow{row_num, sr.to_string()};
                 }
             }
         }
@@ -134,7 +135,7 @@ Row MIOReader::parse()
             if (!sr.empty())
                 r.append(sr.to_string());
             else if (i > b)
-                r.append(std::string(b, i));
+                r.append(std::string{b, i});
 
             b = i + 1;
             sr.reset(b);
@@ -146,7 +147,7 @@ Row MIOReader::parse()
     if (!sr.empty())
         r.append(sr.to_string());
     else
-        r.append(std::string(b, i));
+        r.append(std::string{b, i});
 
     if (semi_branch_expect((i != ms.end()), true))
         it = i + 1;

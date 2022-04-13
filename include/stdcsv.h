@@ -19,6 +19,11 @@ using FieldNames = std::map<std::string, size_type>;
  * it is to mimic std::string_view but with capability in changing head and tail.
  * we use it to avoid potential dynamic memory allocation (and deallocation) and
  * copy in string concatenation.
+ *
+ * @note it is modified to be compatible with both std::getline() and
+ * StringReader::getline(). as StringReader::getline() has been merged into
+ * parse(), we may switch back to the original implementation using InputIter
+ * rather than C after benchmarking.
  */
 template <typename C>
 class StringRange {
@@ -153,7 +158,8 @@ public:
         }
         catch (const std::out_of_range)
         {
-            std::cerr << "std::out_of_range " << s << " is not existing!\n";
+            std::cerr << s << " is not existing!\n";
+            throw;
         }
         catch (const std::exception& e)
         {
@@ -193,7 +199,8 @@ public:
         }
         catch (const std::out_of_range)
         {
-            std::cerr << "std::out_of_range " << s << " is not existing!\n";
+            std::cerr << s << " is not existing!\n";
+            throw;
         }
         catch (const std::exception& e)
         {
@@ -328,6 +335,7 @@ public:
     }
 
     struct InvalidRow : public std::runtime_error {
+        // do we need it?
         InvalidRow() = delete;
 
         InvalidRow(size_type row_num, const std::string& str)
@@ -474,7 +482,7 @@ protected:
     {
         std::string s;
         if (!std::getline(ist, s))
-            throw IterationEnd();
+            throw IterationEnd{};
 
         try
         {
@@ -482,7 +490,7 @@ protected:
         }
         catch (const InvalidRow& e)
         {
-            std::cout << e.what() << '\n';
+            std::cerr << e.what() << '\n';
             // this is necessary. otherwise, DictReader::iterate() will be called
             // if DictReader is being used.
             Reader::iterate();
@@ -495,6 +503,7 @@ private:
     // support double quotes
     Row split(const std::string& s) const;
 
+    // for benchmark only
     template<typename C>
     Row split2(const C& c) const;
 };
@@ -642,7 +651,7 @@ Row Reader::split(const std::string& s) const
                 s1 += std::string(b, i + 1);
                 b = i + 1;
                 if (*b != quote && *b != delim && b != e)
-                    throw InvalidRow(row_num, s1);
+                    throw InvalidRow{row_num, s1};
             }
         }
         else if (*i == delim && !quoted)
@@ -653,7 +662,7 @@ Row Reader::split(const std::string& s) const
                 s1.clear();
             }
             else if (i > b)
-                r.append(std::string(b, i));
+                r.append(std::string{b, i});
 
             b = i + 1;
         }
@@ -663,7 +672,7 @@ Row Reader::split(const std::string& s) const
     if (!s1.empty())
         r.append(s1);
     else
-        r.append(std::string(b, s.end()));
+        r.append(std::string{b, s.end()});
 
     // use move constructor to avoid copy
     return r;
@@ -691,7 +700,7 @@ Row Reader::split2(const C& c) const
                 b = i + 1;
                 sr.extend(b);
                 if (*b != quote && *b != delim && b != e)
-                    throw InvalidRow(row_num, sr.to_string());
+                    throw InvalidRow{row_num, sr.to_string()};
             }
         }
         else if (*i == delim && !quoted)
@@ -699,7 +708,7 @@ Row Reader::split2(const C& c) const
             if (!sr.empty())
                 r.append(sr.to_string());
             else if (i > b)
-                r.append(std::string(b, i));
+                r.append(std::string{b, i});
 
             b = i + 1;
             sr.reset(b);
@@ -710,7 +719,7 @@ Row Reader::split2(const C& c) const
     if (!sr.empty())
         r.append(sr.to_string());
     else
-        r.append(std::string(b, c.end()));
+        r.append(std::string{b, c.end()});
 
     // use move constructor to avoid copy
     return r;
