@@ -24,8 +24,7 @@ int main()
 
 void demo_Reader()
 {
-    auto inputfile {"regular.csv"};
-    auto reader = miocsv::Reader{inputfile};
+    auto reader = miocsv::Reader {"regular.csv"};
 
     // use range-for loop to print out the first 10 lines
     for (const auto& line: reader)
@@ -35,7 +34,7 @@ void demo_Reader()
 
         // retrieve a record using index
         std::cout << "1st record: " << line[0] << "; "
-                  << "2nd record" << line[1] << '\n';
+                  << "2nd record: " << line[1] << '\n';
 
         if (row_num > 10)
             break;
@@ -44,8 +43,7 @@ void demo_Reader()
 
 void demo_DictReader()
 {
-    auto inputfile {"regular.csv"};
-    auto reader = miocsv::DictReader{inputfile};
+    auto reader = miocsv::DictReader {"regular.csv"};
 
     // the order of headers is preserved as the input file
     std::cout << "headers are: " << reader.get_fieldnames() << '\n';
@@ -59,7 +57,7 @@ void demo_DictReader()
         // for DictReader, we offer two ways to retrieve a record
         // 1st way, via index
         std::cout << "2nd record: " << line[1] << "; "
-                  << "3rd record" << line[2] << '\n';
+                  << "3rd record: " << line[2] << '\n';
 
         // 2nd way, via header
         std::cout << "link_id: " << line["link_id"] << "; "
@@ -72,8 +70,7 @@ void demo_DictReader()
 
 void demo_MIOReader()
 {
-    auto inputfile {"regular.csv"};
-    auto mioreader = miocsv::MIOReader{inputfile};
+    auto mioreader = miocsv::MIOReader {"regular.csv"};
 
     for (const auto& line: mioreader)
     {
@@ -82,14 +79,13 @@ void demo_MIOReader()
 
         // similar to Reader, you can retrieve a record using index
         std::cout << "1st record: " << line[0] << "; "
-                  << "2nd record" << line[1] << '\n';
+                  << "2nd record: " << line[1] << '\n';
     }
 }
 
 void demo_MIODictReader()
 {
-    auto inputfile {"regular.csv"};
-    auto mioreader = miocsv::MIODictReader{inputfile};
+    auto mioreader = miocsv::MIODictReader {"regular.csv"};
 
     std::cout << "headers are: " << mioreader.get_fieldnames() << '\n';
 
@@ -101,7 +97,7 @@ void demo_MIODictReader()
         // similar to DictReader, you can retrieve a record using either index or header
         // via index
         std::cout << "2nd record: " << line[1] << "; "
-                  << "3rd record" << line[2] << '\n';
+                  << "3rd record: " << line[2] << '\n';
 
         // via header
         std::cout << "link_id: " << line["link_id"] << "; "
@@ -111,8 +107,7 @@ void demo_MIODictReader()
 
 void demo_Writer()
 {
-    auto outputfile {"output.csv"};
-    auto writer = miocsv::Writer{outputfile};
+    auto writer = miocsv::Writer {"output.csv"};
 
     // there are two ways to construct a line
     // 1st way: construct a dedicate line using Row

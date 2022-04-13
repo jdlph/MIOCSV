@@ -2,33 +2,47 @@
 
 A [MIO](https://github.com/wxinix/wxlib/tree/main/mio)-bsased C++ library to read and write tabular data in CSV format. Our goal is to develop a suite of fast and easy-to-use CSV readers and writer similar to the [csv module](https://docs.python.org/3/library/csv.html#module-csv) from the Python standard library. It serves as our first step to rebuild [DTALite](https://github.com/asu-trans-ai-lab/DTALite) using modern C++.
 
-## Dependency
-miocsv::Reader, miocsv::DictReader, and miocsv::Writer only require C++11. Both miocsv::MIOReader and miocsv::MIODictReader reply on [mio.hpp](include/mio/mio.hpp), which is built upon C++20.
-
 ## Get Started
-upcoming
+Four readers and one writer are provided along with a supporting data structure Row.
+
+Facility | Functionality | Core | Dependency
+---------| --------------| -----------| ----------
+Reader | parse csv file line by line | std::getline() | C++11
+DictReader | parse csv file with headers line by line | std::getline() | C++11
+MIOReader | parse csv file line by line | memory mapping | C++20 and mio.hpp
+DictReader | parse csv file with headers line by line | memory mapping | C++20 and mio.hpp
+Writer | write user's data to a local file | std | C++11
+Row | store delimited strings or convert user’s data into delimited strings | std | C++11
+
 ## Data Inconsistency and Exception Handlings
-1. Consistency over number of records in each row is not enforced (see [RFC4180](https://www.rfc-editor.org/rfc/rfc4180.txt) for details). No waring or exception will be triggered unless it is one of the followings.
-2. Data inconsistency in terms that fieldnames (headers) are more or less than fields. A warning with detailed information will be printed out to help users inspect.
-3. InvalidRow. Any value after quoted field is not allowed. A warning with detailed information will be printed out to help users inspect.
-4. Empty row will be preserved in Reader.
-5. Empty row will be skipped in DictReader.
 
-### Reader
-Users can retrieve a record in a line parsed by Reader via index (nonnegative integer).
-* In case of non-existing index, std::out_of_range will be thrown.
+Consistency over number of records in each row is not enforced (see [RFC4180](https://www.rfc-editor.org/rfc/rfc4180.txt) for details). No waring or exception will be triggered unless it is one of the followings.
 
-### DictReader
-For DictReader, users are able to retrieve a record in a line using either index (nonnegative integer) or fieldname (std::string).
-1. Similar to Reader, std::out_of_range will be thrown if index is not existing.
-2. std::out_of_range will be thrown as well if field does not exist.
-3. NoRecord. It happens only when a valid fieldname is provided but there is no corresponding record (as a result of data inconsistency). NoRecord will be thrown.
+Facility \ Exception | Inconsistent Number of Records | InvalidRow[^1] | Empty Row | Out of Range
+---------------------| -------------------------------| -----------| ----------|--------------
+Reader | N/A | Warning | Preserve | Throw std::out_of_range
+DictReader | Warning if headers are more or less than records | Warning | Discard | Throw std::out_of_range or NoRecord[^2]
+MIOReader | same as Reader
+MIODictReader | same as DictReader
+
+[^1]:
+Any value after quoted field is not allowed, which only applies to input with double quotes. A warning with detailed information will be printed out to help users inspect.
+
+[^2]:
+It happens only when a valid header is provided but there is no corresponding record (as a result of data inconsistency).
 
 ## Performance
 ### Time Bound at a Glance
 The designed miocsv::MIOReader and miocsv::MIODictReader feature **Single Linear Search** and **One Copy-Process**, which are the minimum requirement on any CSV parser implementation. Their time complexity are both _**O(2N)**_ in comparison with _**O(7N) (or O(6N))**_ from a regular implementation discussed below, where N is the number of chars in the file (including special chars, such as white space, delimiter, and line terminator).  They are among the fastest CSV Parsers.
 
-miocsv::Reader and miocsv::DictReader add one additional linear search and two more copy processes than their mio-based counterparts.  Their running times are both bounded by _O(5N)_, which are still fast for majority of common use cases.
+miocsv::Reader and miocsv::DictReader add one additional linear search and two more copy processes than their mio-based counterparts. Their running times are both bounded by _O(5N)_, which are still fast for majority of common use cases.
+
+Facility | Time Complexity
+---------| ---------------
+Reader | _O(5N)_
+DictReader |_O(5N)_
+MIOReader | _O(2N)_
+MIODictReader |_O(2N)_
 
 The reason we go with _N_ rather than _n_ in time bound expressions is to better differentiate with line terminator '\n'.
 
