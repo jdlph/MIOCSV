@@ -6,30 +6,168 @@ A [MIO](https://github.com/wxinix/wxlib/tree/main/mio)-bsased C++ library to rea
 Four readers and one writer are provided along with a supporting data structure Row.
 
 Facility | Functionality | Core | Dependency
----------| --------------| -----------| ----------
+---------| --------------| -----| ----------
 Reader | parse csv file line by line | std::getline() | C++11
 DictReader | parse csv file with headers line by line | std::getline() | C++11
 MIOReader | parse csv file line by line | memory mapping | C++20 and mio.hpp
 DictReader | parse csv file with headers line by line | memory mapping | C++20 and mio.hpp
-Writer | write user's data to a local file | std | C++11
-Row | store delimited strings or convert user’s data into delimited strings | std | C++11
+Writer | write user's data to a local file | ofstream operator<< | C++11
+Row | store delimited strings or convert user’s data into delimited strings | variadic template | C++11
+
+
+***Use Reader***
+```C++
+#include "stdcsv.h"
+
+#include <iostream>
+
+int main()
+{
+    auto reader = miocsv::Reader {"regular.csv"};
+
+    // use range-for loop to print out the first 10 lines
+    for (const auto& line: reader)
+    {
+        auto row_num = reader.get_row_num();
+        std::cout << "line " << row_num  << ": " << line << '\n';
+
+        // retrieve a record using index
+        std::cout << "1st record: " << line[0] << "; "
+                  << "2nd record: " << line[1] << '\n';
+    }
+
+    return 0;
+}
+```
+
+***Use DictReader***
+```C++
+#include "stdcsv.h"
+
+#include <iostream>
+
+int main()
+{
+    auto reader = miocsv::DictReader {"regular.csv"};
+
+    // print out headers
+    std::cout << "headers are: " << reader.get_fieldnames() << '\n';
+
+    // use range-for loop to print out the first 10 lines
+    for (const auto& line: reader)
+    {
+        auto row_num = reader.get_row_num();
+        std::cout << "line " << row_num  << ": " << line << '\n';
+
+        // for DictReader, we offer two ways to retrieve a record
+        // 1st way, via index
+        std::cout << "2nd record: " << line[1] << "; "
+                  << "3rd record: " << line[2] << '\n';
+
+        // 2nd way, via header
+        std::cout << "link_id: " << line["link_id"] << "; "
+                  << "facility_type: " << line["facility_type"] << '\n';
+    }
+
+    return 0;
+}
+```
+
+***Use MIOReader***
+```C++
+#include "miocsv.h"
+
+#include <iostream>
+
+int main()
+{
+    auto reader = miocsv::MIOReader {"regular.csv"};
+
+    // use range-for loop to print out the first 10 lines
+    for (const auto& line: reader)
+    {
+        auto row_num = reader.get_row_num();
+        std::cout << "line " << row_num  << ": " << line << '\n';
+
+        // similar to Reader, you can retrieve a record using index
+        std::cout << "1st record: " << line[0] << "; "
+                  << "2nd record: " << line[1] << '\n';
+    }
+
+    return 0;
+}
+```
+
+***Use MIODictReader***
+```C++
+#include "miocsv.h"
+
+#include <iostream>
+
+int main()
+{
+    auto reader = miocsv::MIODictReader {"regular.csv"};
+
+    // print out headers
+    std::cout << "headers are: " << reader.get_fieldnames() << '\n';
+
+    // use range-for loop to print out the first 10 lines
+    for (const auto& line: reader)
+    {
+        auto row_num = reader.get_row_num();
+        std::cout << "line " << row_num  << ": " << line << '\n';
+
+        // similar to DictReader, you can retrieve a record using either index or header
+        // via index
+        std::cout << "2nd record: " << line[1] << "; "
+                  << "3rd record: " << line[2] << '\n';
+
+        // 2nd way, via header
+        std::cout << "link_id: " << line["link_id"] << "; "
+                  << "facility_type: " << line["facility_type"] << '\n';
+    }
+
+    return 0;
+}
+```
+
+***Use Writer***
+```C++
+#include "stdcsv.h"
+
+#include <iostream>
+
+int main()
+{
+    auto writer = miocsv::Writer {"output.csv"};
+
+    // there are two ways to construct a line
+    // 1st way: construct a dedicate line using Row
+    miocsv::Row r = {"1st way to write a record include string, int, and double",
+                     "sting", 1, 1.1};
+    writer.write_row(r);
+
+    // 2nd way: simply place a line into write_row()
+    writer.write_row({"2nd way to write a record", "string", 2, 2.0});
+
+    return 0;
+}
+```
 
 ## Data Inconsistency and Exception Handlings
 
 Consistency over number of records in each row is not enforced (see [RFC4180](https://www.rfc-editor.org/rfc/rfc4180.txt) for details). No waring or exception will be triggered unless it is one of the followings.
 
-Facility \ Exception | Inconsistent Number of Records | InvalidRow[^1] | Empty Row | Out of Range
----------------------| -------------------------------| -----------| ----------|--------------
+Facility \ Exception | Inconsistent Number of Records | InvalidRow[^*] | Empty Row | Out of Range
+---------------------| -------------------------------| ---------------| ----------|--------------
 Reader | N/A | Warning | Preserve | Throw std::out_of_range
-DictReader | Warning if headers are more or less than records | Warning | Discard | Throw std::out_of_range or NoRecord[^2]
+DictReader | Warning if headers are more or less than records | Warning | Discard | Throw std::out_of_range or NoRecord[^*]
 MIOReader | same as Reader
 MIODictReader | same as DictReader
 
-[^1]:
-Any value after quoted field is not allowed, which only applies to input with double quotes. A warning with detailed information will be printed out to help users inspect.
+[^*]: Any value after quoted field is not allowed, which only applies to input with double quotes. A warning with detailed information will be printed out to help users inspect.
 
-[^2]:
-It happens only when a valid header is provided but there is no corresponding record (as a result of data inconsistency).
+[^**]: It happens only when a valid header is provided but there is no corresponding record (as a result of data inconsistency).
 
 ## Performance
 ### Time Bound at a Glance
