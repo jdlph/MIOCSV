@@ -113,7 +113,7 @@ Row MIOReader::parse()
     Row r;
     auto quoted = false;
 
-    while (*i != lineter && semi_branch_expect((i != ms.end()), true))
+    while (*i != lineter)
     {
         if (*i == quote)
         {
@@ -134,7 +134,7 @@ Row MIOReader::parse()
         {
             if (!sr.empty())
                 r.append(sr.to_string());
-            else if (i > b)
+            else
                 r.append(std::string{b, i});
 
             b = i + 1;
@@ -149,9 +149,8 @@ Row MIOReader::parse()
     else
         r.append(std::string{b, i});
 
-    if (semi_branch_expect((i != ms.end()), true))
-        it = i + 1;
-    else
+    it = i + 1;
+    if (semi_branch_expect((it == ms.end()), true))
         it = nullptr;
 
     return r;

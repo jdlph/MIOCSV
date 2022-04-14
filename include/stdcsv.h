@@ -152,7 +152,7 @@ public:
             size_type i = fieldnames->at(s);
             // more fieldnames than fields
             if (i >= records.size())
-                throw NoRecord();
+                throw NoRecord{};
 
             return records[i];
         }
@@ -634,7 +634,7 @@ inline BaseReader::ReaderIterator BaseReader::end()
 Row Reader::split(const std::string& s) const
 {
     if (s.empty())
-        return Row();
+        return Row{};
 
     Row r;
     std::string s1;
@@ -682,7 +682,7 @@ template<typename C>
 Row Reader::split2(const C& c) const
 {
     if (c.empty())
-        return Row();
+        return Row{};
 
     auto b = c.begin();
     StringRange<C> sr{b};
@@ -707,7 +707,7 @@ Row Reader::split2(const C& c) const
         {
             if (!sr.empty())
                 r.append(sr.to_string());
-            else if (i > b)
+            else
                 r.append(std::string{b, i});
 
             b = i + 1;

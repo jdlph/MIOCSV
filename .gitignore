@@ -4,6 +4,7 @@
 *.out
 /demo
 miocsv.demo
+miocsv.test
 demo.dSYM
 output.csv
 build
