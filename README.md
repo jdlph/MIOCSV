@@ -155,7 +155,7 @@ int main()
 
 ### Exception Handlings
 
-Consistency in number of records over rows (i.e., lines) is not enforced (see [RFC4180](https://www.rfc-editor.org/rfc/rfc4180.txt) for details). No waring or exception will be triggered unless it is one of the followings.
+Consistency in number of records over rows (i.e., lines) is not enforced (see [RFC4180](https://www.rfc-editor.org/rfc/rfc4180.txt) for details). No warning or exception will be triggered unless it is one of the followings.
 
 Facility \ Exception | Inconsistent Number of Records | InvalidRow[^1] | Empty Row | Row::operator[] Out of Range
 ---------------------| -------------------------------| ---------------| ----------|--------------
@@ -166,7 +166,7 @@ MIODictReader | see DictReader
 
 [^1]: Any value after quoted field is not allowed, which only applies to input with double quotes. A warning with detailed information will be printed out to help users inspect.
 [^2]: It happens when retrieving a record by operator[] via either index and index is out of range (negative or greater than the number of records).
-[^3]: It complements NoRecord in Reader when retrieving a record by operator[] via header, i.e., an invalid header is given or a valid header is provided but there is no corresponding record (as a result of data inconsistency).
+[^3]: It complements NoRecord for Reader when retrieving a record by operator[] via header, i.e., an invalid header is given or a valid header is provided but there is no corresponding record (as a result of data inconsistency).
 
 ## Performance
 ### Time Bound at a Glance
@@ -185,7 +185,7 @@ The reason we go with _N_ rather than _n_ in time bound expressions is to better
 
 ### Benchmarks
 
-We conduct benchmark tests using a [data set](test/csvreader.csv) with 25,921 lines and 12 fields[^4]. We time the average of five runs (in milliseconds) for each implementation including reader and DictReader from Python csv module as well.
+We conduct benchmark tests using a [data set](test/csvreader.csv) with 12 fields and 25,921 lines[^4]. We time the average of five runs (in milliseconds) for each implementation including reader and DictReader from Python csv module as well.
 
 Facility | Reader | DictReader | MIOReader | MIODictReader | Python csv.reader | Python csv.DictReader
 :-------:| :-----:| :---------:| :-------: | :-----------: | :---------------: | :-------------------:
@@ -193,7 +193,9 @@ CPU Time | 47 | 48 | 23 | 26 | 37 | 124
 
 [^4]: MacBook Pro (13-inch, 2020), CPU: Intel Core i5-1038NG7, RAM: 16GB 3733MHz LPDDR4X, Hard Drive: 512GB SSD, OS: Monterey 12.3.1, C++ Compiler: Apple clang 12.0.0, Python Interpreter: 3.7.6
 
-**Note that** the core of Python csv.reader is **Iterable**, which is a **C implementation**. csv.DictReader is built upon csv.reader with additional operations in setting up fieldnanes (headers) and linking fieldnames to fields (records) for each line, which are written in Python. It accounts for their performance difference. Our Reader implementation relies on std::getline(), which implies a time bound of _**O(5N)**_ including two linear searches and three copy operations for each line. Its performance can be significantly improved by an _**O(3N)**_ implementation with one linear search and two copy operations even without using memory mapping, and will output its C-based counterpart. See the following section for detailed analysis and discussion.
+**Note that** the core of Python csv.reader is **Iterable**, which is a **C implementation**. csv.DictReader is built upon csv.reader with additional operations in setting up fieldnanes (headers) and linking fieldnames to fields (records) for each line, which are written in Python. It accounts for their performance difference.
+
+Our Reader implementation relies on std::getline(), which implies a time bound of _**O(5N)**_ including two linear searches and three copy operations for each line. Its performance can be significantly improved by an _**O(3N)**_ implementation with one linear search and two copy operations even without using memory mapping, and will output its C-based counterpart. See the following section for detailed analysis and discussion.
 
 ### Under the Hood
 Parsing a CSV file or a file of any other delimited formats is essentially a linear search over the source file (as a stream of chars) and extract strings separated by the delimiter(s).
@@ -230,7 +232,11 @@ C++11 introduced moving semantics, which can helps us bypass it as well as Copy 
 
 Note that the string involved in Copy 2 and Copy 3 does nothing but only serves an intermediate media from buffered chars and the parsed substrings. Once its substrings are parsed, it becomes useless, and will be discarded while we are moving to the next line.
 
-Therefore, why construct such a string object from the first beginning which only incurs unnecessary copy operation and additional cost on memory allocation? Why not pass its range as a pair of begin and end iterators which is equivalent but much more efficient (almost zero overhead)? To remove this copy operation, we can either build a customer string range type or simply adopt std::string_view (C++17).
+So why construct such a string object from the first beginning which only incurs unnecessary copy operation and additional cost on memory allocation? Why not pass its range as a pair of begin and end iterators which is equivalent but much more efficient (almost zero overhead)? To remove this copy operation, we can either build a customer string range type ([StringRange](https://github.com/jdlph/MIOCSV#a-quick-tour)) or simply adopt std::string_view (C++17). This will lead to the following enhanced implementation[^5] bounded by _**O(3N)**_.
+
+[^5]: Not implemented yet.
+
+![Our Enhanced Regular CSV Parser](pic/regular3.png)
 
 With memory mapping presented before, the first copy operation is dropped as well. At this point, it leaves us with one and only one copy directly from chars in the file to the parsed substrings in conjunction with the single linear search, which indicates a tight time bound of _**O(2N)**_.
 
