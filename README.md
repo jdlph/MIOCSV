@@ -245,4 +245,6 @@ With memory mapping presented before, the first copy operation is dropped as wel
 ## Acknowledgement
 This project is inspired by two existing works from the community.
 * [mio::StringReader.getline()](https://github.com/wxinix/wxlib/blob/main/mio/include/mio/stringreader.hpp). Thanks to Dr. Wuping Xin for making this master piece!
-* The parsing algorithm from [CSVparser](https://github.com/rsylvian/CSVparser). Thanks to its original author for this elegant procedure!
+* The parsing algorithm from [CSVparser](https://github.com/rsylvian/CSVparser)[^6]. Thanks to its original author for this elegant procedure!
+
+[^6]: We enhance it with double quote support, which is common in CSV files.

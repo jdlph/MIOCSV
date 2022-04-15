@@ -71,29 +71,8 @@ private:
 };
 
 class Row {
-    friend void attach_fieldnames(Row& r, const FieldNames* fns, size_type row_num)
-    {
-        r.fieldnames = fns;
-        if (r.fieldnames->size() != r.size())
-        {
-            std::cout << "CAUTION: Data Inconsistency at line " << row_num
-                      << ": " << r.fieldnames->size() << " fieldnames vs. "
-                      << r.size() << " fields\n";
-        }
-    }
-
-    friend std::ostream& operator<<(std::ostream& os, const Row& r)
-    {
-        if (r.empty())
-            return os;
-
-        for (size_type i = 0, sz = r.size(); i != sz - 1; ++i)
-            os << r.records[i] << ',';
-        // last one
-        os << r.back();
-
-        return os;
-    }
+    friend void attach_fieldnames(Row&, const FieldNames*, size_type);
+    friend std::ostream& operator<<(std::ostream&, const Row&);
 
 public:
     using Records = std::vector<std::string>;
@@ -619,6 +598,30 @@ private:
 };
 
 // implementations
+void attach_fieldnames(Row& r, const FieldNames* fns, size_type row_num)
+{
+    r.fieldnames = fns;
+    if (r.fieldnames->size() != r.size())
+    {
+        std::cout << "CAUTION: Data Inconsistency at line " << row_num
+                    << ": " << r.fieldnames->size() << " fieldnames vs. "
+                    << r.size() << " fields\n";
+    }
+}
+
+std::ostream& operator<<(std::ostream& os, const Row& r)
+{
+    if (r.empty())
+        return os;
+
+    for (size_type i = 0, sz = r.size(); i != sz - 1; ++i)
+        os << r.records[i] << ',';
+    // last one
+    os << r.back();
+
+    return os;
+}
+
 inline BaseReader::ReaderIterator BaseReader::begin()
 {
     // just in case users retrieve it after iteration starts
@@ -663,7 +666,7 @@ Row Reader::split(const std::string& s) const
                 r.append(s1);
                 s1.clear();
             }
-            else if (i > b)
+            else
                 r.append(std::string{b, i});
 
             b = i + 1;
