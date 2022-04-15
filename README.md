@@ -174,12 +174,12 @@ The designed miocsv::MIOReader and miocsv::MIODictReader feature **Single Linear
 
 miocsv::Reader and miocsv::DictReader add one additional linear search and two more copy processes than their mio-based counterparts. Their running times are both bounded by _**O(5N)**_, which are still fast for most use cases.
 
-Facility | Time Complexity
-:-------:| :-------------:
-Reader | _O(5N)_
-DictReader |_O(5N)_
-MIOReader | _O(2N)_
-MIODictReader |_O(2N)_
+Facility | Linear Search | Copy | Overall Time Complexity
+:-------:| :------------:| :-----:| :----------------------:
+Reader | _O(2N)_ | _O(3N)_ | _O(5N)_
+DictReader | _O(2N)_ | _O(3N)_ | _O(5N)_
+MIOReader | _O(N)_ | _O(N)_ |_O(2N)_
+MIODictReader | _O(N)_ | _O(N)_ |_O(2N)_
 
 The reason we go with _N_ rather than _n_ in time bound expressions is to better differentiate with line terminator '\n'.
 
@@ -205,7 +205,7 @@ How fast it can iterate over the source file char by char largely determines its
 1. multithreading
 2. memory mapping
 
-As the underlying linear search in parsing indicates a sequential operation, **multithreading** might be useless and even cause contention problems unless multiple files are being processed at the same time.
+As the underlying linear search in parsing indicates a sequential operation, **multithreading** might be moot and even cause contention problems unless there are independent partitions (see [mio::StringReader.getline_async()](https://github.com/wxinix/wxlib/blob/main/mio/include/mio/stringreader.hpp) for illustration).
 
 **Memory mapping** is another and natural way to increase I/O performance, especially for large files, by reducing I/O data movement (i.e., copy) and enabling way faster access operations. It allows a process (e.g., our CSV parser) to access a file and directly incorporate file data into the process address space without copying the data itself into a data buffer (e.g., std::ifstream in C++).
 
@@ -249,4 +249,4 @@ This project is inspired by two existing works from the community.
 
 Besides, we would like to thank Dr. Wuping Xin again for his valuable suggestions and comments towards this project, which lead to improvement in both its appearance and performance.
 
-[^6]: We enhance it with double quote support, which is common in CSV files.
+[^6]: We enhance it with support for double quotes, which are common in CSV files.

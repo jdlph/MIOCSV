@@ -1,8 +1,6 @@
 #ifndef GUARD_STDCSV_H
 #define GUARD_STDCSV_H
 
-#define SINGLE_LINEAR_SEARCH
-
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -443,8 +441,6 @@ public:
             std::cerr << "invalid input!\n";
             std::terminate();
         }
-
-        it = ist;
     }
 
     Reader(std::string&& ist_, const char delim_ = ',')
@@ -455,8 +451,6 @@ public:
             std::cerr << "invalid input!\n";
             std::terminate();
         }
-
-        it = ist;
     }
 
 protected:
@@ -465,15 +459,6 @@ protected:
 
     void iterate() override
     {
-#ifdef SINGLE_LINEAR_SEARCH
-        if (!ist)
-            throw IterationEnd{};
-
-        try
-        {
-            row = parse();
-        }
-#else
         std::string s;
         if (!std::getline(ist, s))
             throw IterationEnd{};
@@ -482,7 +467,6 @@ protected:
         {
             row = split2(s);
         }
-#endif
         catch (const InvalidRow& e)
         {
             std::cerr << e.what() << '\n';
@@ -495,19 +479,12 @@ protected:
     }
 
 private:
-    std::istreambuf_iterator<char> it;
-    
     // support double quotes
     Row split(const std::string& s) const;
 
     // for benchmark only
     template<typename C>
     Row split2(const C& c) const;
-
-#ifdef SINGLE_LINEAR_SEARCH
-    // single linear search
-    Row parse();
-#endif
 };
 
 class DictReader : public Reader, public BaseDictReader {
@@ -756,69 +733,6 @@ Row Reader::split2(const C& c) const
     // use move constructor to avoid copy
     return r;
 }
-
-#ifdef SINGLE_LINEAR_SEARCH
-Row Reader::parse()
-{
-    static constexpr char lineter = '\n';
-    static constexpr std::istreambuf_iterator<char> it_end;
-
-    auto b = it;
-    // StringRange<std::istreambuf_iterator<char>> sr{b};
-    std::string sr;
-
-    Row r;
-    auto quoted = false;
-
-    // caution: the last line might be null terminated rather than '\n'
-    while (*it != lineter && it != it_end)
-    {
-        if (*it == quote)
-        {
-            quoted ^= true;
-            if (!quoted)
-            {
-                sr += std::string(b, ++it);
-                b = it;
-                if (*b != quote && *b != delim && *b != lineter)
-                {
-                    ++it = std::find(it, it_end, lineter);
-                    throw Reader::InvalidRow{row_num, sr};
-                }
-            }
-            else
-                ++it;
-        }
-        else if (*it == delim && !quoted)
-        {
-            if (!sr.empty())
-            {
-                r.append(sr);
-                sr.clear();
-            }
-            else
-                r.append(std::string{b, it});
-
-            b = ++it;
-        }
-        else
-            ++it;
-    }
-
-    // last one
-    if (!sr.empty())
-        r.append(sr);
-    else
-        r.append(std::string{b, it});
-
-    if (!ist.eof())
-        ++it;
-    else
-        it = nullptr;
-
-    return r;
-}
-#endif
 
 } // namespace miocsv
 
