@@ -20,7 +20,10 @@ public:
         : BaseReader{}, ms {ms_}, delim {delim_}
     {
         if (!ms.is_mapped())
+        {
             std::cerr << "invalid input!\n";
+            std::terminate();
+        }
 
         it = ms.begin();
     }
@@ -29,7 +32,10 @@ public:
         : BaseReader{}, ms {ms_}, delim {delim_}
     {
         if (!ms.is_mapped())
+        {
             std::cerr << "invalid input!\n";
+            std::terminate();
+        }
 
         it = ms.begin();
     }

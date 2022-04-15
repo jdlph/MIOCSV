@@ -130,16 +130,16 @@ public:
 
     std::string& operator[](size_type i)
     {
-        if (i >= records.size() || 0 > i)
-            throw std::out_of_range{std::to_string(i)};
+        if (i < 0 || i >= records.size())
+            throw NoRecord{i};
 
         return records[i];
     }
 
     const std::string& operator[](size_type i) const
     {
-        if (i >= records.size() || 0 > i)
-            throw std::out_of_range{std::to_string(i)};
+        if (i < 0 || i >= records.size())
+            throw NoRecord{i};
 
         return records[i];
     }
@@ -150,20 +150,12 @@ public:
         try
         {
             size_type i = fieldnames->at(s);
-            // more fieldnames than fields
-            if (i >= records.size())
-                throw NoRecord{};
-
+            // more fieldnames than fields will be taken care by operator[]
             return records[i];
         }
         catch (const std::out_of_range)
         {
-            std::cerr << s << " is not existing!\n";
-            throw;
-        }
-        catch (const std::exception& e)
-        {
-            std::cerr << e.what() << '\n';
+            throw NoRecord{s};
         }
     }
 
@@ -191,20 +183,12 @@ public:
         try
         {
             size_type i = fieldnames->at(s);
-            // more fieldnames than fields
-            if (i >= records.size())
-                throw NoRecord();
-
+            // more fieldnames than fields will be taken care by operator[]
             return records[i];
         }
         catch (const std::out_of_range)
         {
-            std::cerr << s << " is not existing!\n";
-            throw;
-        }
-        catch (const std::exception& e)
-        {
-            std::cerr << e.what() << '\n';
+            throw NoRecord{s};
         }
     }
 
@@ -276,8 +260,14 @@ private:
     // reserved for DictReader
     const FieldNames* fieldnames = nullptr;
 
-    class NoRecord {
-
+    template<typename T>
+    struct NoRecord : public std::runtime_error {
+        NoRecord() = delete;
+        
+        explicit NoRecord(T& t) 
+            : std::runtime_error{"Row::operator[] at " + std::to_string(t)}
+        {
+        }
     };
 
     template<typename T>
@@ -341,8 +331,8 @@ public:
         InvalidRow(size_type row_num, const std::string& str)
             : std::runtime_error{"CAUTION: Invalid Row at line "
                                  + std::to_string(row_num + 1)
-                                 + "! Any value after quoted field is not allowed:"
-                                 + " invalid field found after " + str}
+                                 + "! Any value after quoted field is not allowed: "
+                                 + str}
         {
         }
     };
@@ -464,14 +454,20 @@ public:
         : BaseReader{}, ist {ist_}, delim {delim_}
     {
         if (!ist)
+        {
             std::cerr << "invalid input!\n";
+            std::terminate();
+        }
     }
 
     Reader(std::string&& ist_, const char delim_ = ',')
         : BaseReader{}, ist {ist_}, delim {delim_}
     {
         if (!ist)
+        {
             std::cerr << "invalid input!\n";
+            std::terminate();
+        }
     }
 
 protected:
@@ -545,14 +541,20 @@ public:
         : ost {ost_}, delim {delim_}
     {
         if (!ost)
+        {
             std::cerr << "invalid input!\n";
+            std::terminate();
+        }
     }
 
     Writer(std::string&& ost_, const char delim_ = ',')
         : ost {ost_}, delim {delim_}
     {
         if (!ost)
+        {
             std::cerr << "invalid input!\n";
+            std::terminate();
+        }
     }
 
     Writer(const Writer&) = delete;

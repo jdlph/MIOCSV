@@ -157,15 +157,15 @@ int main()
 
 Consistency over number of records in each row (i.e., line) is not enforced (see [RFC4180](https://www.rfc-editor.org/rfc/rfc4180.txt) for details). No waring or exception will be triggered unless it is one of the followings.
 
-Facility \ Exception | Inconsistent Number of Records | InvalidRow[^1] | Empty Row | Out of Range
+Facility \ Exception | Inconsistent Number of Records | InvalidRow[^1] | Empty Row | Operator[] Out of Range
 ---------------------| -------------------------------| ---------------| ----------|--------------
 Reader | N/A | Warning | Preserve | Throw std::out_of_range
-DictReader | Warning if headers are more or less than records | Warning | Discard | Throw std::out_of_range or NoRecord[^2]
+DictReader | Warning if headers are more or less than records | Warning | Discard | Throw NoRecord[^2]
 MIOReader | same as Reader
 MIODictReader | same as DictReader
 
 [^1]: Any value after quoted field is not allowed, which only applies to input with double quotes. A warning with detailed information will be printed out to help users inspect.
-[^2]: It happens only when a valid header is provided but there is no corresponding record (as a result of data inconsistency).
+[^2]: It happens when retrieving a record using operator [] via either index or header, e.g., index is greater than the number of records or a valid header is provided but there is no corresponding record (as a result of data inconsistency).
 
 ## Performance
 ### Time Bound at a Glance
@@ -190,7 +190,7 @@ Facility | Reader | DictReader | MIOReader | MIODictReader | Python csv.reader |
 :-------:| :-----:| :---------:| :-------: | :-----------: | :---------------: | :-------------------:
 CPU Time | 47 | 48 | 23 | 26 | 37 | 124
 
-[^3] MacBook Pro (13-inch, 2020), CPU: Intel Core i5-1038NG7, RAM: 16GB 3733MHz LPDDR4X, Hard Drive: 512GB SSD, OS: Monterey 12.3.1, C++ Compiler: Apple clang version 12.0.0, Python Interpreter: 3.7.6
+[^3]: MacBook Pro (13-inch, 2020), CPU: Intel Core i5-1038NG7, RAM: 16GB 3733MHz LPDDR4X, Hard Drive: 512GB SSD, OS: Monterey 12.3.1, C++ Compiler: Apple clang 12.0.0, Python Interpreter: 3.7.6
 
 ### Under the Hood
 Parsing a CSV file or a file of any other delimited formats is essentially a linear search over the source file (as a stream of chars) and extract strings separated by the delimiter(s).
