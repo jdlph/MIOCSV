@@ -13,7 +13,7 @@ MIOReader | parse csv file line by line | memory mapping | mio.hpp and C++20
 MIODictReader | parse csv file with headers line by line | memory mapping | mio.hpp and C++20
 Writer | write user's data to a local file | std::ofstream operator<< | C++11
 Row | store delimited strings or convert user’s data into strings | variadic template | C++11
-StringRange | define a string range by [head, tail] to facilitate string concatenation | template | C++11
+StringRange | define a string range by [head, tail] to facilitate string operations | template | C++11
 
 ### Getting Started
 ***Use Reader***
@@ -174,7 +174,7 @@ The designed miocsv::MIOReader and miocsv::MIODictReader feature **Single Linear
 miocsv::Reader and miocsv::DictReader add one additional linear search and two more copy processes than their mio-based counterparts. Their running times are both bounded by _**O(5N)**_, which are still fast for majority of common use cases.
 
 Facility | Time Complexity
----------| ---------------
+:-------:| :-------------:
 Reader | _O(5N)_
 DictReader |_O(5N)_
 MIOReader | _O(2N)_
@@ -183,7 +183,14 @@ MIODictReader |_O(2N)_
 The reason we go with _N_ rather than _n_ in time bound expressions is to better differentiate with line terminator '\n'.
 
 ### Benchmarks
-upcoming
+
+We conduct benchmark tests using a [data set](test/csvreader.csv) with 25,921 lines and 12 fields[^3]. We time the average of five runs in milliseconds for each implementation including reader and DictReader from Python CSV module as well.
+
+Facility | Reader | DictReader | MIOReader | MIODictReader | Python csv.reader | Python csv.DictReader
+:-------:| :-----:| :---------:| :-------: | :-----------: | :---------------: | :-------------------:
+CPU Time | 47 | 48 | 23 | 26 | 37 | 124
+
+[^3] MacBook Pro (13-inch, 2020), CPU: Intel Core i5-1038NG7, RAM: 16GB 3733MHz LPDDR4X, Hard Drive: 512GB SSD, OS: Monterey 12.3.1, C++ Compiler: Apple clang version 12.0.0, Python Interpreter: 3.7.6
 
 ### Under the Hood
 Parsing a CSV file or a file of any other delimited formats is essentially a linear search over the source file (as a stream of chars) and extract strings separated by the delimiter(s).

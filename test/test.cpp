@@ -13,7 +13,7 @@ void test(DemoCases& tc);
 
 int main()
 {
-    DemoCases tc {mio_reader};
+    DemoCases tc {std_reader};
 
     test(tc);
 

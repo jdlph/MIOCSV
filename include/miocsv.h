@@ -1,8 +1,8 @@
 #ifndef GUARD_MIOCSV_H
 #define GUARD_MIOCSV_H
 
-#include "stdcsv.h"
 #include "mio/mio.hpp"
+#include "stdcsv.h"
 
 #ifdef __GNUC__
 #define semi_branch_expect(x, y) __builtin_expect(x, y)
