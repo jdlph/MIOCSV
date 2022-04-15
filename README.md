@@ -3,7 +3,7 @@
 A [MIO](https://github.com/wxinix/wxlib/tree/main/mio)-bsased C++ library to read and write tabular data in CSV format. Our goal is to develop a suite of fast and easy-to-use CSV readers and writer similar to the [csv module](https://docs.python.org/3/library/csv.html#module-csv) from the Python standard library. It serves as our first step to rebuild [DTALite](https://github.com/asu-trans-ai-lab/DTALite) using modern C++.
 
 ## A Quick Tour
-Four readers and one writer are provided along with a supporting data structure Row.
+Four readers and one writer are provided along with two supporting data structures.
 
 Facility | Functionality | Core | Dependency
 ---------| --------------| -----| ----------
@@ -13,6 +13,7 @@ MIOReader | parse csv file line by line | memory mapping | mio.hpp and C++20
 MIODictReader | parse csv file with headers line by line | memory mapping | mio.hpp and C++20
 Writer | write user's data to a local file | std::ofstream operator<< | C++11
 Row | store delimited strings or convert user’s data into strings | variadic template | C++11
+StringRange | define a string range by [head, tail] to facilitate string concatenation | template | C++11
 
 ### Getting Started
 ***Use Reader***
@@ -185,7 +186,7 @@ The reason we go with _N_ rather than _n_ in time bound expressions is to better
 upcoming
 
 ### Under the Hood
-Parsing a CSV file or a file of any other delimited formats is essentially a linear search over the source file (as a stream of chars) and subtract/slice/parse/extract strings separated by the delimiter(s).
+Parsing a CSV file or a file of any other delimited formats is essentially a linear search over the source file (as a stream of chars) and extract strings separated by the delimiter(s).
 
 How fast it can iterate over the source file char by char largely determines its overall performance. As it is an I/O constrained operation, there are two general ways to speed it up.
 
@@ -204,7 +205,7 @@ A common and easy way to implement a CSV parser is by repeating the following tw
 
 Operation 1 iterates every each char and search for the line terminator (i.e., '\n') while operation 2 repeats the same process but rather looking for the delimiter over the same set of chars returned from 1.
 
-For a file with _N_ chars, this implementation involves two almost identical linear searches and implies a number of _O(2N)_ constant operations (in terms of comparison to these special chars). Why not combine them into one and reduce the operations into _O(N)_ times.  Even _O(2N)~O(N)_ in complexity analysis, their difference cannot be ignored in this context.
+For a file with _N_ chars, this implementation involves two almost identical linear searches and implies a number of _O(2N)_ constant operations (in terms of comparison to these special chars). Why not combine them into one and reduce the operations into _O(N)_ times?  Even _O(2N)~O(N)_ in complexity analysis, their difference cannot be ignored in this context.
 #### Copy Matters
 
 There are several data copy operations going around with this implementation as illustrated by the following figure.
@@ -219,14 +220,13 @@ C++11 introduced moving semantics, which can helps us bypass it as well as Copy 
 
 Note that the string involved in copy 2 and copy 3 does nothing but only serves an intermediate media from buffered chars and the parsed substrings. Once its substrings are parsed, it becomes useless, and will be discarded while we are moving to the next line.
 
-Why construct such a string object from the first beginning which only incurs unnecessary copy operation and additional cost on memory allocation? Why not pass its range as a pair of begin and end iterators which is equivalent but much more efficient (almost zero overhead)?
-
-We can either build a customer string range type or simply adopt std::string_view (C++17). Either way will remove this copy operation.
+Therefore, why construct such a string object from the first beginning which only incurs unnecessary copy operation and additional cost on memory allocation? Why not pass its range as a pair of begin and end iterators which is equivalent but much more efficient (almost zero overhead)? To remove this copy operation, we can either build a customer string range type or simply adopt std::string_view (C++17).
 
 With memory mapping presented before, the first copy operation is dropped as well. At this point, it leaves us with one and only one copy directly from chars in the file to the parsed substrings in conjunction with the single linear search.
 
 ![Our MIO-Based CSV Parser](pic/mio.png)
 
 ## Acknowledgement
-* [mio::StringReader.getline()](https://github.com/wxinix/wxlib/blob/main/mio/include/mio/stringreader.hpp) is created by Dr. Wuping Xin. Thanks to him for making this master piece!
-* The string split method is from [CSVparser](https://github.com/rsylvian/CSVparser). Thanks to its original author for this elegant procedure!
+This project is inspired by two existing works from the community.
+* [mio::StringReader.getline()](https://github.com/wxinix/wxlib/blob/main/mio/include/mio/stringreader.hpp). Thanks to Dr. Wuping Xin for making this master piece!
+* The parsing algorithm from [CSVparser](https://github.com/rsylvian/CSVparser). Thanks to its original author for this elegant procedure!

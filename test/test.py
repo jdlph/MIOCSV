@@ -29,7 +29,7 @@ def test_dictreader():
             continue
 
     te = time()
-    print(f'Python csv.reader parses {reader.line_num} lines '
+    print(f'Python csv.DictReader parses {reader.line_num} lines '
           f'in {(te-ts)*1000:.0f} milliseconds')
 
 
