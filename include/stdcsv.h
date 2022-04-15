@@ -263,8 +263,8 @@ private:
     template<typename T>
     struct NoRecord : public std::runtime_error {
         NoRecord() = delete;
-        
-        explicit NoRecord(T& t) 
+
+        explicit NoRecord(T& t)
             : std::runtime_error{"Row::operator[] at " + std::to_string(t)}
         {
         }

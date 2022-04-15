@@ -34,7 +34,7 @@ void test_Reader()
 
     auto te = std::chrono::high_resolution_clock::now();
 
-    std::cout << "miocsv::Reader parses " << reader.get_row_num() << " lines in " 
+    std::cout << "miocsv::Reader parses " << reader.get_row_num() << " lines in "
               << std::chrono::duration_cast<std::chrono::milliseconds>(te - ts).count()
               << " milliseconds\n";
 }
@@ -51,7 +51,7 @@ void test_DictReader()
 
     auto te = std::chrono::high_resolution_clock::now();
 
-    std::cout << "miocsv::DictReader parses " << reader.get_row_num() << " lines in " 
+    std::cout << "miocsv::DictReader parses " << reader.get_row_num() << " lines in "
               << std::chrono::duration_cast<std::chrono::milliseconds>(te - ts).count()
               << " milliseconds\n";
 }
@@ -68,7 +68,7 @@ void test_MIOReader()
 
     auto te = std::chrono::high_resolution_clock::now();
 
-    std::cout << "miocsv::MIOReader parses " << mioreader.get_row_num() << " lines in " 
+    std::cout << "miocsv::MIOReader parses " << mioreader.get_row_num() << " lines in "
               << std::chrono::duration_cast<std::chrono::milliseconds>(te - ts).count()
               << " milliseconds\n";
 }
@@ -85,7 +85,7 @@ void test_MIODictReader()
 
     auto te = std::chrono::high_resolution_clock::now();
 
-    std::cout << "miocsv::MIODictReader parses " << mioreader.get_row_num() << " lines in " 
+    std::cout << "miocsv::MIODictReader parses " << mioreader.get_row_num() << " lines in "
               << std::chrono::duration_cast<std::chrono::milliseconds>(te - ts).count()
               << " milliseconds\n";
 }
