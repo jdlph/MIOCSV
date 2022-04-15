@@ -247,4 +247,6 @@ This project is inspired by two existing works from the community.
 * [mio::StringReader.getline()](https://github.com/wxinix/wxlib/blob/main/mio/include/mio/stringreader.hpp). Thanks to Dr. Wuping Xin for making this master piece!
 * The parsing algorithm from [CSVparser](https://github.com/rsylvian/CSVparser)[^6]. Thanks to its original author for this elegant procedure!
 
+Besides, we would like to thank Dr. Wuping Xin again for his valuable suggestions and comments towards this project, which lead to improvement in both its appearance and performance.
+
 [^6]: We enhance it with double quote support, which is common in CSV files.
