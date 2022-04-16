@@ -1,6 +1,8 @@
 #ifndef GUARD_STDCSV_H
 #define GUARD_STDCSV_H
 
+#define ONE_LINEAR_SEARCH
+
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -446,7 +448,9 @@ public:
             std::cerr << "invalid input!\n";
             std::terminate();
         }
+#ifdef ONE_LINEAR_SEARCH
         it = ist;
+#endif
     }
 
     Reader(std::string&& ist_, const char delim_ = ',')
@@ -457,26 +461,37 @@ public:
             std::cerr << "invalid input!\n";
             std::terminate();
         }
+#ifdef ONE_LINEAR_SEARCH
         it = ist;
+#endif
     }
 
 protected:
     std::ifstream ist;
     const char delim;
+#ifdef ONE_LINEAR_SEARCH
     std::istreambuf_iterator<char> it;
     std::istreambuf_iterator<char> it_end;
+#endif
 
     void iterate() override
     {
-        // std::string s;
-        // if (!std::getline(ist, s))
+        
+#ifdef ONE_LINEAR_SEARCH
         if (it == it_end)
+#else
+        std::string s;
+        if (!std::getline(ist, s))
+#endif  
             throw IterationEnd{};
 
         try
         {
-            // row = split2(s);
+#ifdef ONE_LINEAR_SEARCH
             row = split3();
+#else
+            row = split2(s);
+#endif
         }
         catch (const InvalidRow& e)
         {
@@ -747,16 +762,16 @@ Row Reader::split2(const C& c) const
     return r;
 }
 
+#ifdef ONE_LINEAR_SEARCH
 Row Reader::split3()
 {
     static constexpr char lineter = '\n';
 
     Row r;
+    std::string s;
     auto quoted = false;
 
-    std::string s;
-    std::string s2;
-
+    // caution: the last line might be null terminated rather than '\n'
     while (*it != lineter && it != it_end)
     {
         if (*it == quote)
@@ -764,42 +779,29 @@ Row Reader::split3()
             quoted ^= true;
             if (!quoted)
             {
-                s2 += *it++;
+                s += *it++;
                 if (*it != quote && *it != delim && *it != lineter)
                 {
                     ++it = std::find(it, it_end, lineter);
-                    throw Reader::InvalidRow{row_num, s2};
+                    throw Reader::InvalidRow{row_num, s};
                 }
             }
             else
-                s2 += *it++;
+                s += *it++;
         }
         else if (*it == delim && !quoted)
         {
-            if (!s.empty())
-            {
-                r.append(s);
-                s.clear();
-            }
-            else
-            {
-                r.append(s2);
-                s2.clear();
-            }
+            r.append(s);
+            s.clear();
 
             ++it;
         }
         else
-        {
-            s2 += *it++;
-        }
+            s += *it++;
     }
 
     // last one
-    if (!s.empty())
-        r.append(s);
-    else
-        r.append(s2);
+    r.append(s);
 
     if (it != it_end)
         ++it;
@@ -807,6 +809,7 @@ Row Reader::split3()
     // use move constructor to avoid copy
     return r;
 }
+#endif
 
 } // namespace miocsv
 
