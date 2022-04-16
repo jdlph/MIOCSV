@@ -195,7 +195,7 @@ CPU Time | 47 | 48 | 23 | 26 | 37 | 124
 
 **Note that** the core of Python csv.reader is **Iterable**, which is a **C implementation**. csv.DictReader is built upon csv.reader with additional operations in setting up fieldnanes (headers) and linking fieldnames to fields (records) for each line, which are written in Python. It accounts for their performance difference.
 
-Our Reader implementation relies on std::getline(), which implies a time bound of _**O(5N)**_ including two linear searches and three copy operations for each line. Its performance can be significantly improved by an _**O(3N)**_ implementation with one linear search and two copy operations even without using memory mapping, and will output its C-based counterpart. See the following section for detailed analysis and discussion.
+Our Reader implementation relies on std::getline(), which implies a time bound of _**O(5N)**_ including two linear searches and three copy operations for each line. Its performance can be significantly improved by an _**O(3N)**_ implementation with one linear search and two copy operations even without using memory mapping, and will outperform its C-based counterpart. See the following section for detailed analysis and discussion.
 
 ### Under the Hood
 Parsing a CSV file or a file of any other delimited formats is essentially a linear search over the source file (as a stream of chars) and extract strings separated by the delimiter(s).
@@ -247,6 +247,6 @@ This project is inspired by two existing works from the community.
 * [mio::StringReader.getline()](https://github.com/wxinix/wxlib/blob/main/mio/include/mio/stringreader.hpp). Thanks to Dr. Wuping Xin for making this master piece!
 * The parsing algorithm from [CSVparser](https://github.com/rsylvian/CSVparser)[^6]. Thanks to its original author for this elegant procedure!
 
-Besides, we would like to thank Dr. Wuping Xin again for his valuable suggestions and comments towards this project, which lead to improvement in both its appearance and performance.
+Besides, we would like to thank Dr. Wuping Xin for his valuable suggestions and comments towards this project, which lead to improvement in both its appearance and performance.
 
 [^6]: We enhance it with support for double quotes, which are common in CSV files.

@@ -60,10 +60,66 @@ public:
         head = tail = it;
     }
 
+    size_type size() const
+    {
+        return tail - head + 1;
+    }
+
     std::string to_string() const
     {
         return std::string{head, tail};
     }
+
+    std::string_view to_string_view() const
+    {
+        return {std::to_address(head), size()};   
+    }
+
+private:
+    iterator head;
+    iterator tail;
+};
+
+class StringSpan {
+public:
+    using iterator = const char*;
+
+    StringSpan() = delete;
+
+    explicit StringSpan(iterator it) : head {it}, tail {it}
+    {
+    }
+
+    StringSpan(const StringSpan&) = delete;
+    StringSpan& operator=(const StringSpan&) = delete;
+
+    StringSpan(StringSpan&&) = delete;
+    StringSpan& operator=(StringSpan&&) = delete;
+
+    ~StringSpan() = default;
+
+    bool empty() const
+    {
+        return tail == head;
+    }
+
+    void extend(iterator it)
+    {
+        // check it > tail?
+        tail = it;
+    }
+
+    void reset(iterator it)
+    {
+        head = tail = it;
+    }
+
+    std::string to_string() const
+    {
+        return std::string{head, tail};
+    }
+
+
 
 private:
     iterator head;
@@ -485,6 +541,9 @@ private:
     // for benchmark only
     template<typename C>
     Row split2(const C& c) const;
+
+    template<typename C>
+    Row split3(const C& s) const;
 };
 
 class DictReader : public Reader, public BaseDictReader {
@@ -698,6 +757,57 @@ Row Reader::split2(const C& c) const
 
     Row r;
     auto quoted = false;
+
+    for (auto i = c.begin(), e = c.end(); i != e; ++i)
+    {
+        if (*i == quote)
+        {
+            quoted ^= true;
+            if (!quoted)
+            {
+                b = i + 1;
+                sr.extend(b);
+                if (*b != quote && *b != delim && b != e)
+                    throw InvalidRow{row_num, sr.to_string()};
+            }
+        }
+        else if (*i == delim && !quoted)
+        {
+            if (!sr.empty())
+                r.append(sr.to_string());
+            else
+                r.append(std::string{b, i});
+
+            b = i + 1;
+            sr.reset(b);
+        }
+    }
+
+    // last one
+    if (!sr.empty())
+        r.append(sr.to_string());
+    else
+        r.append(std::string{b, c.end()});
+
+    std::cout << std::string{sr.to_string_view()} << '\n';
+
+    // use move constructor to avoid copy
+    return r;
+}
+
+template<typename C>
+Row Reader::split3(const C& c) const
+{
+    if (c.empty())
+        return Row{};
+
+    auto b = c.begin();
+    StringRange<C> sr{b};
+
+    Row r;
+    auto quoted = false;
+
+    std::string_view sv {sr.head, sr.size()};
 
     for (auto i = c.begin(), e = c.end(); i != e; ++i)
     {
