@@ -1,7 +1,7 @@
 #ifndef GUARD_STDCSV_H
 #define GUARD_STDCSV_H
 
-#define ONE_LINEAR_SEARCH
+// #define ONE_LINEAR_SEARCH
 
 #include <fstream>
 #include <iostream>
@@ -739,6 +739,8 @@ Row Reader::split2(const C& c) const
                 if (*b != quote && *b != delim && b != e)
                     throw InvalidRow{row_num, sr.to_string()};
             }
+            else
+                sr.extend(i+1);
         }
         else if (*i == delim && !quoted)
         {
@@ -750,6 +752,8 @@ Row Reader::split2(const C& c) const
             b = i + 1;
             sr.reset(b);
         }
+        else
+            sr.extend(i+1);
     }
 
     // last one
