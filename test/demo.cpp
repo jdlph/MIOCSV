@@ -24,7 +24,7 @@ int main()
 
 void demo_Reader()
 {
-    auto reader = miocsv::Reader {"irregular.csv"};
+    auto reader = miocsv::Reader {"/Users/jdlph/Dev/MIOCSV/test/irregular.csv"};
 
     // use range-for loop to print out the first 10 lines
     for (const auto& line: reader)
@@ -33,11 +33,11 @@ void demo_Reader()
         std::cout << "line " << row_num  << ": " << line << '\n';
 
         // retrieve a record using index
-        std::cout << "1st record: " << line[0] << "; "
-                  << "2nd record: " << line[1] << '\n';
+        // std::cout << "1st record: " << line[0] << "; "
+        //           << "2nd record: " << line[1] << '\n';
 
-        if (row_num > 10)
-            break;
+        // if (row_num > 10)
+        //     break;
     }
 }
 

@@ -70,57 +70,6 @@ public:
         return std::string{head, tail};
     }
 
-    std::string_view to_string_view() const
-    {
-        return {std::to_address(head), size()};   
-    }
-
-private:
-    iterator head;
-    iterator tail;
-};
-
-class StringSpan {
-public:
-    using iterator = const char*;
-
-    StringSpan() = delete;
-
-    explicit StringSpan(iterator it) : head {it}, tail {it}
-    {
-    }
-
-    StringSpan(const StringSpan&) = delete;
-    StringSpan& operator=(const StringSpan&) = delete;
-
-    StringSpan(StringSpan&&) = delete;
-    StringSpan& operator=(StringSpan&&) = delete;
-
-    ~StringSpan() = default;
-
-    bool empty() const
-    {
-        return tail == head;
-    }
-
-    void extend(iterator it)
-    {
-        // check it > tail?
-        tail = it;
-    }
-
-    void reset(iterator it)
-    {
-        head = tail = it;
-    }
-
-    std::string to_string() const
-    {
-        return std::string{head, tail};
-    }
-
-
-
 private:
     iterator head;
     iterator tail;
@@ -497,6 +446,7 @@ public:
             std::cerr << "invalid input!\n";
             std::terminate();
         }
+        it = ist;
     }
 
     Reader(std::string&& ist_, const char delim_ = ',')
@@ -507,21 +457,26 @@ public:
             std::cerr << "invalid input!\n";
             std::terminate();
         }
+        it = ist;
     }
 
 protected:
     std::ifstream ist;
     const char delim;
+    std::istreambuf_iterator<char> it;
+    std::istreambuf_iterator<char> it_end;
 
     void iterate() override
     {
-        std::string s;
-        if (!std::getline(ist, s))
+        // std::string s;
+        // if (!std::getline(ist, s))
+        if (it == it_end)
             throw IterationEnd{};
 
         try
         {
-            row = split2(s);
+            // row = split2(s);
+            row = split3();
         }
         catch (const InvalidRow& e)
         {
@@ -542,8 +497,7 @@ private:
     template<typename C>
     Row split2(const C& c) const;
 
-    template<typename C>
-    Row split3(const C& s) const;
+    Row split3();
 };
 
 class DictReader : public Reader, public BaseDictReader {
@@ -789,56 +743,66 @@ Row Reader::split2(const C& c) const
     else
         r.append(std::string{b, c.end()});
 
-    std::cout << std::string{sr.to_string_view()} << '\n';
-
     // use move constructor to avoid copy
     return r;
 }
 
-template<typename C>
-Row Reader::split3(const C& c) const
+Row Reader::split3()
 {
-    if (c.empty())
-        return Row{};
-
-    auto b = c.begin();
-    StringRange<C> sr{b};
+    static constexpr char lineter = '\n';
 
     Row r;
     auto quoted = false;
 
-    std::string_view sv {sr.head, sr.size()};
+    std::string s;
+    std::string s2;
 
-    for (auto i = c.begin(), e = c.end(); i != e; ++i)
+    while (*it != lineter && it != it_end)
     {
-        if (*i == quote)
+        if (*it == quote)
         {
             quoted ^= true;
             if (!quoted)
             {
-                b = i + 1;
-                sr.extend(b);
-                if (*b != quote && *b != delim && b != e)
-                    throw InvalidRow{row_num, sr.to_string()};
+                s2 += *it++;
+                if (*it != quote && *it != delim && *it != lineter)
+                {
+                    ++it = std::find(it, it_end, lineter);
+                    throw Reader::InvalidRow{row_num, s2};
+                }
             }
-        }
-        else if (*i == delim && !quoted)
-        {
-            if (!sr.empty())
-                r.append(sr.to_string());
             else
-                r.append(std::string{b, i});
+                s2 += *it++;
+        }
+        else if (*it == delim && !quoted)
+        {
+            if (!s.empty())
+            {
+                r.append(s);
+                s.clear();
+            }
+            else
+            {
+                r.append(s2);
+                s2.clear();
+            }
 
-            b = i + 1;
-            sr.reset(b);
+            ++it;
+        }
+        else
+        {
+            s2 += *it++;
         }
     }
 
     // last one
-    if (!sr.empty())
-        r.append(sr.to_string());
+    if (!s.empty())
+        r.append(s);
     else
-        r.append(std::string{b, c.end()});
+        r.append(s2);
+
+    if (it != it_end)
+        ++it;
 
     // use move constructor to avoid copy
     return r;
