@@ -1,7 +1,7 @@
 #ifndef GUARD_STDCSV_H
 #define GUARD_STDCSV_H
 
-// #define ONE_LINEAR_SEARCH
+#define ONE_LINEAR_SEARCH
 
 #include <fstream>
 #include <iostream>
@@ -721,46 +721,36 @@ Row Reader::split2(const C& c) const
     if (c.empty())
         return Row{};
 
-    auto b = c.begin();
-    StringRange<C> sr{b};
+    StringRange<C> sr{c.begin()};
 
     Row r;
     auto quoted = false;
 
-    for (auto i = c.begin(), e = c.end(); i != e; ++i)
+    for (auto i = c.begin(), e = c.end(); i != e;)
     {
         if (*i == quote)
         {
             quoted ^= true;
             if (!quoted)
             {
-                b = i + 1;
-                sr.extend(b);
-                if (*b != quote && *b != delim && b != e)
+                sr.extend(++i);
+                if (*i != quote && *i != delim && i != e)
                     throw InvalidRow{row_num, sr.to_string()};
             }
             else
-                sr.extend(i+1);
+                sr.extend(++i);
         }
         else if (*i == delim && !quoted)
         {
-            if (!sr.empty())
-                r.append(sr.to_string());
-            else
-                r.append(std::string{b, i});
-
-            b = i + 1;
-            sr.reset(b);
+            r.append(sr.to_string());
+            sr.reset(++i);
         }
         else
-            sr.extend(i+1);
+            sr.extend(++i);
     }
 
     // last one
-    if (!sr.empty())
-        r.append(sr.to_string());
-    else
-        r.append(std::string{b, c.end()});
+    r.append(sr.to_string());
 
     // use move constructor to avoid copy
     return r;

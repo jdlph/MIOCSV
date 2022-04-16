@@ -112,11 +112,9 @@ Row MIOReader::parse()
         return Row{};
     }
 
-    auto b = it;
-    StringRange<std::string_view> sr{b};
-
     Row r;
     auto quoted = false;
+    StringRange<std::string_view> sr{it};
 
     // caution: the last line might be null terminated rather than '\n'
     while (*it != lineter && semi_branch_expect((it != ms.end()), true))
@@ -126,33 +124,27 @@ Row MIOReader::parse()
             quoted ^= true;
             if (!quoted)
             {
-                b = it + 1;
-                sr.extend(b);
-                if (*b != quote && *b != delim && *b != lineter)
+                sr.extend(++it);
+                if (*it != quote && *it != delim && *it != lineter)
                 {
                     ++it = std::find(it, ms.end(), lineter);
                     throw Reader::InvalidRow{row_num, sr.to_string()};
                 }
             }
+            else
+                sr.extend(++it);
         }
         else if (*it == delim && !quoted)
         {
-            if (!sr.empty())
-                r.append(sr.to_string());
-            else
-                r.append(std::string{b, it});
-
-            b = it + 1;
-            sr.reset(b);
+            r.append(sr.to_string());
+            sr.reset(++it);
         }
-        ++it;
+        else
+            sr.extend(++it);
     }
 
     // last one
-    if (!sr.empty())
-        r.append(sr.to_string());
-    else
-        r.append(std::string{b, it});
+    r.append(sr.to_string());
 
     if (semi_branch_expect((it != ms.end()), true))
         ++it;

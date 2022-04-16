@@ -24,7 +24,7 @@ int main()
 
 void demo_Reader()
 {
-    auto reader = miocsv::Reader {"/Users/jdlph/Dev/MIOCSV/test/irregular.csv"};
+    auto reader = miocsv::Reader {"irregular.csv"};
 
     // use range-for loop to print out the first 10 lines
     for (const auto& line: reader)
