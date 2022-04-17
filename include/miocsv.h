@@ -98,7 +98,7 @@ private:
             MIOReader::iterate();
 
         if (row_num > 1)
-            attach_fieldnames(row, &fieldnames, row_num);
+            attach_fieldnames(row, &fns, row_num);
     }
 };
 

@@ -135,7 +135,7 @@ public:
     {
         try
         {
-            size_type i = fieldnames->at(s);
+            size_type i = fns->at(s);
             // more fieldnames than fields will be taken care by operator[]
             return records[i];
         }
@@ -168,7 +168,7 @@ public:
     {
         try
         {
-            size_type i = fieldnames->at(s);
+            size_type i = fns->at(s);
             // more fieldnames than fields will be taken care by operator[]
             return records[i];
         }
@@ -244,7 +244,7 @@ public:
 private:
     Records records;
     // reserved for DictReader
-    const FieldNames* fieldnames = nullptr;
+    const FieldNames* fns = nullptr;
 
     struct NoRecord : public std::runtime_error {
         NoRecord() = delete;
@@ -321,7 +321,7 @@ public:
         InvalidRow(size_type row_num, const std::string& str)
             : std::runtime_error{"CAUTION: Invalid Row at line "
                                  + std::to_string(row_num + 1)
-                                 + "! Any value after quoted field is not allowed: "
+                                 + "! Value is not allowed after quoted field: "
                                  + str}
         {
         }
@@ -409,10 +409,10 @@ public:
         for (size_type i = 0, sz = r.size(); i != sz; ++i)
         {
             const auto& s = r[i];
-            fieldnames[s] = i;
+            fns[s] = i;
         }
 
-        if (fieldnames.empty() && row_num == 0)
+        if (fns.empty() && row_num == 0)
         {
             try
             {
@@ -428,11 +428,11 @@ public:
 
     const FieldNames& get_fieldnames() const
     {
-        return fieldnames;
+        return fns;
     }
 
 protected:
-    FieldNames fieldnames;
+    FieldNames fns;
 };
 
 // dreaded diamond
@@ -476,7 +476,6 @@ protected:
 
     void iterate() override
     {
-
 #ifdef O3_TIME_BOUND
         if (it == it_end)
             throw IterationEnd{};
@@ -544,7 +543,7 @@ private:
             Reader::iterate();
 
         if (row_num > 1)
-            attach_fieldnames(row, &fieldnames, row_num);
+            attach_fieldnames(row, &fns, row_num);
     }
 };
 
@@ -636,11 +635,11 @@ private:
 // implementations
 void attach_fieldnames(Row& r, const FieldNames* fns, size_type row_num)
 {
-    r.fieldnames = fns;
-    if (r.fieldnames->size() != r.size())
+    r.fns = fns;
+    if (r.fns->size() != r.size())
     {
         std::cout << "CAUTION: Data Inconsistency at line " << row_num
-                    << ": " << r.fieldnames->size() << " fieldnames vs. "
+                    << ": " << r.fns->size() << " fieldnames vs. "
                     << r.size() << " fields\n";
     }
 }
