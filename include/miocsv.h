@@ -114,7 +114,7 @@ Row MIOReader::parse()
 
     Row r;
     auto quoted = false;
-    StringRange<std::string_view> sr{it};
+    StringRange<const char*> sr{it};
 
     // caution: the last line might be null terminated rather than '\n'
     while (*it != lineter && semi_branch_expect((it != ms.end()), true))

@@ -22,20 +22,13 @@ using FieldNames = std::map<std::string, size_type>;
  * it is to mimic std::string_view but with capability in changing head and tail.
  * we use it to avoid potential dynamic memory allocation (and deallocation) and
  * copy in string concatenation.
- *
- * @note it is modified to be compatible with both std::getline() and
- * StringReader::getline(). as StringReader::getline() has been merged into
- * parse(), we may switch back to the original implementation using InputIter
- * rather than C after benchmarking.
  */
-template <typename C>
+template <typename InputIter>
 class StringRange {
 public:
-    using iterator = typename C::const_iterator;
-
     StringRange() = delete;
 
-    explicit StringRange(iterator it) : head {it}, tail {it}
+    explicit StringRange(InputIter it) : head {it}, tail {it}
     {
     }
 
@@ -52,13 +45,13 @@ public:
         return tail == head;
     }
 
-    void extend(iterator it)
+    void extend(InputIter it)
     {
         // check it > tail?
         tail = it;
     }
 
-    void reset(iterator it)
+    void reset(InputIter it)
     {
         head = tail = it;
     }
@@ -74,8 +67,8 @@ public:
     }
 
 private:
-    iterator head;
-    iterator tail;
+    InputIter head;
+    InputIter tail;
 };
 
 class Row {
@@ -725,7 +718,7 @@ Row Reader::split2(const C& c) const
     if (c.empty())
         return Row{};
 
-    StringRange<C> sr{c.begin()};
+    StringRange<C::const_iterator> sr{c.begin()};
 
     Row r;
     auto quoted = false;
