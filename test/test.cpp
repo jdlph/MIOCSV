@@ -1,19 +1,22 @@
 #include <stdcsv.h>
 #include <miocsv.h>
 
+#include <fstream>
 #include <iostream>
+#include <string>
 
-enum DemoCases {std_reader, std_dictreader, mio_reader, mio_dictreader};
+enum DemoCases {std_reader, std_dictreader, mio_reader, mio_dictreader, std_getline};
 
 void test_Reader();
 void test_DictReader();
 void test_MIOReader();
 void test_MIODictReader();
+void test_getline();
 void test(DemoCases& tc);
 
 int main()
 {
-    DemoCases tc {mio_reader};
+    DemoCases tc {std_dictreader};
 
     test(tc);
 
@@ -90,6 +93,24 @@ void test_MIODictReader()
               << " milliseconds\n";
 }
 
+void test_getline()
+{
+    auto ts = std::chrono::high_resolution_clock::now();
+    std::ifstream ist {"csvreader.csv"};
+
+    auto line_num = 0;
+    for (std::string s; std::getline(ist, s); ++line_num)
+    {
+        // do nothing
+    }
+
+    auto te = std::chrono::high_resolution_clock::now();
+
+    std::cout << "std::getline() reads " << line_num << " lines in "
+              << std::chrono::duration_cast<std::chrono::milliseconds>(te - ts).count()
+              << " milliseconds\n";
+}
+
 void test(DemoCases& tc)
 {
     switch (tc)
@@ -108,6 +129,10 @@ void test(DemoCases& tc)
 
     case mio_dictreader:
         test_MIODictReader();
+        break;
+
+    case std_getline:
+        test_getline();
         break;
 
     default:

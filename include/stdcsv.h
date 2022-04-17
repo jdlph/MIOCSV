@@ -1,7 +1,7 @@
 #ifndef GUARD_STDCSV_H
 #define GUARD_STDCSV_H
 
-#define ONE_LINEAR_SEARCH
+#define O3_TIME_BOUND
 
 #include <fstream>
 #include <iostream>
@@ -448,7 +448,7 @@ public:
             std::cerr << "invalid input!\n";
             std::terminate();
         }
-#ifdef ONE_LINEAR_SEARCH
+#ifdef O3_TIME_BOUND
         it = ist;
 #endif
     }
@@ -461,7 +461,7 @@ public:
             std::cerr << "invalid input!\n";
             std::terminate();
         }
-#ifdef ONE_LINEAR_SEARCH
+#ifdef O3_TIME_BOUND
         it = ist;
 #endif
     }
@@ -469,25 +469,26 @@ public:
 protected:
     std::ifstream ist;
     const char delim;
-#ifdef ONE_LINEAR_SEARCH
+#ifdef O3_TIME_BOUND
     std::istreambuf_iterator<char> it;
     std::istreambuf_iterator<char> it_end;
 #endif
 
     void iterate() override
     {
-        
-#ifdef ONE_LINEAR_SEARCH
+
+#ifdef O3_TIME_BOUND
         if (it == it_end)
+            throw IterationEnd{};
 #else
         std::string s;
         if (!std::getline(ist, s))
-#endif  
             throw IterationEnd{};
+#endif
 
         try
         {
-#ifdef ONE_LINEAR_SEARCH
+#ifdef O3_TIME_BOUND
             row = split3();
 #else
             row = split2(s);
@@ -505,13 +506,16 @@ protected:
     }
 
 private:
-    // support double quotes
+    // for benchmark only
     Row split(const std::string& s) const;
 
-    // for benchmark only
+    // with split2(), the overall time complexity is O(5N) which includes two
+    // linear searches and three copy processes.
     template<typename C>
     Row split2(const C& c) const;
 
+    // with split3(), the overall time complexity is O(3N) which includes one
+    // linear search and two copy processes.
     Row split3();
 };
 
@@ -756,7 +760,7 @@ Row Reader::split2(const C& c) const
     return r;
 }
 
-#ifdef ONE_LINEAR_SEARCH
+#ifdef O3_TIME_BOUND
 Row Reader::split3()
 {
     static constexpr char lineter = '\n';
@@ -773,7 +777,7 @@ Row Reader::split3()
             quoted ^= true;
             if (!quoted)
             {
-                s += *it++;
+                s.push_back(*it++);
                 if (*it != quote && *it != delim && *it != lineter)
                 {
                     ++it = std::find(it, it_end, lineter);
@@ -781,7 +785,7 @@ Row Reader::split3()
                 }
             }
             else
-                s += *it++;
+                s.push_back(*it++);
         }
         else if (*it == delim && !quoted)
         {
@@ -791,7 +795,7 @@ Row Reader::split3()
             ++it;
         }
         else
-            s += *it++;
+            s.push_back(*it++);
     }
 
     // last one
