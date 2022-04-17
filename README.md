@@ -5,15 +5,15 @@ A [MIO](https://github.com/wxinix/wxlib/tree/main/mio)-bsased C++ library to rea
 ## A Quick Tour
 Four readers and one writer are provided along with two supporting data structures.
 
-Facility | Functionality | Core | Dependency
----------| --------------| -----| ----------
-Reader | parse csv file line by line | std::istreambuf_iterator | C++11
-DictReader | parse csv file with headers line by line | std::istreambuf_iterator | C++11
-MIOReader | parse csv file line by line | memory mapping | mio.hpp and C++20
-MIODictReader | parse csv file with headers line by line | memory mapping | mio.hpp and C++20
-Writer | write user's data to a local file | std::ofstream operator<< | C++11
-Row | store delimited strings or convert user’s data into strings | variadic template | C++11
-StringRange | define a string range by [head, tail] to facilitate string operations | template | C++11
+Facility | Functionality | Core | Dependency | Implementation
+---------| --------------| -----| ---------- | ---------------
+Reader | parse csv file line by line | std::istreambuf_iterator | C++11 | stdcsv.h
+DictReader | parse csv file with headers line by line | std::istreambuf_iterator | C++11 | stdcsv.h
+MIOReader | parse csv file line by line | memory mapping | mio.hpp and C++20 | miocsv.h
+MIODictReader | parse csv file with headers line by line | memory mapping | mio.hpp and C++20 | miocsv.h
+Writer | write user's data to a local file | std::ofstream operator<< | C++11 | stdcsv.h
+Row | store delimited strings or convert user’s data into strings | variadic template | C++11 | stdcsv.h
+StringRange | define a string range by [head, tail] to facilitate string operations | template | C++11 | stdcsv.h
 
 ### Getting Started
 ***Use Reader***

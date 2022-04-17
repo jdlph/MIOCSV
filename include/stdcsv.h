@@ -502,13 +502,26 @@ private:
     // for benchmark only
     Row split(const std::string& s) const;
 
-    // with split2(), the overall time complexity is O(5N) which includes two
-    // linear searches and three copy processes.
+    /**
+     * @brief parse string
+     *
+     * @param C string container, which could be std::string or std::string_view
+     * @return Row
+     *
+     * @note with split2(), the overall time complexity is O(5N) which includes two
+     * linear searches and three copy processes.
+     */
     template<typename C>
     Row split2(const C& c) const;
 
-    // with split3(), the overall time complexity is O(3N) which includes one
-    // linear search and two copy processes.
+    /**
+     * @brief parse string
+     *
+     * @return Row
+     *
+     * @note with split3(), the overall time complexity is O(3N) which includes one
+     * linear search and two copy processes.
+     */
     Row split3();
 };
 
