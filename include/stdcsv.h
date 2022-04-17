@@ -718,7 +718,7 @@ Row Reader::split2(const C& c) const
     if (c.empty())
         return Row{};
 
-    StringRange<C::const_iterator> sr{c.begin()};
+    StringRange<typename C::const_iterator> sr{c.begin()};
 
     Row r;
     auto quoted = false;
