@@ -143,7 +143,7 @@ int main()
     // there are two ways to construct a line
     // 1st way: construct a dedicate line using Row
     miocsv::Row r = {"1st way to write a record include string, int, and double",
-                     "sting", 1, 1.1};
+                     "string", 1, 1.1};
     writer.write_row(r);
 
     // 2nd way: simply place a line into write_row()
@@ -246,7 +246,7 @@ With memory mapping presented before, the first copy operation is dropped as wel
 
 ### Furthermore
 
-As our design is to parse a CSV file line by line, a line along with its records will be discarded at this end of each iteration. Similar to the case on Copy 2 and Copy 3, we actually create and store strings which have only a temporary life cycle, and make unnecessary string copy operations (i.e., from chars to each parsed string). With memory mapping, the input file has been mapped to process memory. Therefore, we could store the range of a string rather than the string itself for later use. In other words, the aforementioned extensive copy can be reduced to a copy of std::string_view or our [StringRange](https://github.com/jdlph/MIOCSV#a-quick-tour), which is essentially a pair of pointers, and imposes almost zero overhead. For a file with _**C**_ fields and _**m**_ lines, it will reduce copy operations from _**O(N)**_ to _**O(mC)**_. This brings a refined overall time bound of _**O(N + mC)**_~_**O(N)**_ given _**mC << N**_ in most cases.
+As our design is to parse a CSV file line by line, a line along with its records will be discarded at this end of each iteration. Similar to the case on Copy 2 and Copy 3, we actually create and store strings which have only a temporary life cycle, and make unnecessary string copy operations (i.e., from chars to each parsed string). With memory mapping, the input file has been mapped to process memory. Therefore, we could store the range of a string rather than the string itself for later use. In other words, the aforementioned extensive copy can be reduced to a copy of std::string_view or our [StringRange](https://github.com/jdlph/MIOCSV#a-quick-tour), which is essentially a pair of pointers, and imposes almost zero overhead. For a file with _**C**_ fields and _**m**_ lines, it will reduce copy operations from _**O(N)**_ to _**O(mC)**_. This brings a refined overall time bound of _**O(N + mC)**_~_**O(N)**_, given _**mC << N**_ in most cases.
 
 Even _**O(N)**_ is the best time bound over all possible CSV parser implementations, its underlying linear search over chars can be still improved by [AVX2 Intrinsics](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html). A perfect example is [mio::StringReader.fast_find()](https://github.com/wxinix/wxlib/blob/main/mio/include/mio/stringreader.hpp), which illustrates how to load 32 bytes into CPU registers and utilize some special flags to facilitate the search process.
 

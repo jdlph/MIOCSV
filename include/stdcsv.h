@@ -3,6 +3,7 @@
 
 #define O3_TIME_BOUND
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <map>

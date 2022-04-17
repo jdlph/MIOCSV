@@ -112,7 +112,7 @@ void demo_Writer()
     // there are two ways to construct a line
     // 1st way: construct a dedicate line using Row
     miocsv::Row r = {"1st way to write a record include string, int, and double",
-                     "sting", 1, 1.1};
+                     "string", 1, 1.1};
     writer.write_row(r);
 
     // 2nd way: simply place a line into write_row()
