@@ -170,7 +170,7 @@ MIODictReader | see DictReader
 
 ## Performance
 ### Time Bound at a Glance
-The designed miocsv::MIOReader and miocsv::MIODictReader feature **Single Linear Search** and **One Copy-Process** in parsing each line of a CSV file. Their time complexities are both _**O(2N)**_ in comparison with _**O(7N)**_ (or _**O(6N)**_) of a regular implementation discussed below, where _N_ is the number of chars in the file (including special chars, such as white space, delimiter, and line terminator). They are among the fastest CSV Parsers.
+The designed miocsv::MIOReader and miocsv::MIODictReader feature **Single Linear Search** and **One Copy Process** in parsing each line of a CSV file. Their time complexities are both _**O(2N)**_ in comparison with _**O(7N)**_ (or _**O(6N)**_) of a regular implementation discussed below, where _N_ is the number of chars in the file (including special chars, such as white space, delimiter, and line terminator). They are among the fastest CSV Parsers.
 
 miocsv::Reader and miocsv::DictReader add one more copy process than their mio-based counterparts. Their running times are both bounded by _**O(3N)**_, which are still fast for most use cases.
 
@@ -195,10 +195,10 @@ CPU Time (ms) | 40 | 40 | 23 | 26 | 37 | 124
 
 **Note that** the core of Python csv.reader is **Iterable**, which is a **C implementation**. csv.DictReader is built upon csv.reader with additional operations in setting up fieldnanes (headers) and linking fieldnames to fields (records) for each line, which are written in Python. It accounts for their performance difference.
 
-Reader and DictReader can be implemented using std::getline() for simplicity, which implies a time bound of _**O(5N)**_ including two linear searches and three copy operations for each line. They are referred to as _Enhanced Regular CSV Parsers_ in the following section. For better comparison, we include the CPU times from the two _O(5N)_ implementations along with their core, std::getline(). 
+Reader and DictReader can be implemented using std::getline() for simplicity, which implies a time bound of _**O(5N)**_ including two linear searches and three copy operations for each line. They are referred to as _Enhanced Regular CSV Parsers_ in the following section. For better comparison, we include their CPU times along with that from their core, std::getline().
 
 Facility | Reader (_O(5N)_) | DictReader (_O(5N)_)| std::getline() |
-:-------:| :---------------:| :------------------:| :------------: | 
+:-------:| :---------------:| :------------------:| :------------: |
 CPU Time (ms) | 47 | 48 | 16 |
 
 ### Under the Hood
@@ -219,7 +219,7 @@ A common and easy way to implement a CSV parser is by repeating the following tw
 1. retrieve a line from the file
 2. parse a line into a set of strings
 
-Operation 1 iterates every each char and search for the line terminator (i.e., '\n') while Operation 2 repeats the same process but rather looking for the delimiter over the same set of chars returned from 1.
+Operation 1 iterates every each char and search for the line terminator while Operation 2 repeats the same process but rather looking for the delimiter over the same set of chars returned from Operation 1.
 
 For a file with _N_ chars, this implementation involves two almost identical linear searches and implies a number of _O(2N)_ constant operations (in terms of comparison to these special chars). Why not combine them into one and reduce the operations into _O(N)_ times?  Even _O(2N)~O(N)_ in complexity analysis, their difference in CPU time cannot be ignored in this context. This can be achieved by introducing an iterator directly pointing to the stream of chars.
 #### Copy Matters
@@ -236,7 +236,7 @@ C++11 introduced moving semantics, which can helps us bypass it as well as Copy 
 
 Note that the string involved in Copy 2 and Copy 3 does nothing but only serves an intermediate media from buffered chars and the parsed substrings. Once its substrings are parsed, it becomes useless, and will be discarded while we are moving to the next line.
 
-So why construct such a string object from the first beginning which only incurs unnecessary copy operation and additional cost on memory allocation? Why not pass its range as a pair of begin and end iterators which is equivalent but much more efficient (almost zero overhead)? To remove this copy operation, we can either build a customer string range type ([StringRange](https://github.com/jdlph/MIOCSV#a-quick-tour)) or simply adopt std::string_view (C++17). This will lead to the following enhanced implementation bounded by _**O(3N)**_, which is the default implementation for Reader and DictReader.
+So why construct such a string object from the first beginning which only incurs unnecessary copy operation and additional cost on memory allocation? Why not pass its range as a pair of begin and end iterators which is equivalent but much more efficient (almost zero overhead)? To remove this copy operation, we can either build a customer string range type ([StringRange](https://github.com/jdlph/MIOCSV#a-quick-tour)) or simply adopt std::string_view (C++17). This will lead to the following enhanced implementation bounded by _**O(3N)**_, which is also the default implementation for Reader and DictReader.
 
 ![Our Regular CSV Parser](pic/regular3.png)
 
@@ -246,9 +246,9 @@ With memory mapping presented before, the first copy operation is dropped as wel
 
 ### Furthermore
 
-As our design is to parse a CSV file line by line, a line along with its records will be discarded at this end of each iteration. Similar to the case on Copy 2 and Copy 3, we actually create and store strings which have only a temporary life cycle, and make unnecessary string copy operations (i.e., from chars to each parsed string). With memory mapping, the input file has been mapped to process memory. Therefore, we could store the range of a string for later use rather than the string itself. In other words, the aforementioned extensive copy can be reduced to a copy of std::string_view or our StringRange, which is essentially a pair of pointers, and imposes almost zero overhead. For a file with C fields and m lines, it will reduce copy operations from _**O(N)**_ to _**O(mC)**_. This brings a refined overall time bound of _**O(N + mC)**_~_**O(N)**_ given _**mC << N**_ in most cases.
+As our design is to parse a CSV file line by line, a line along with its records will be discarded at this end of each iteration. Similar to the case on Copy 2 and Copy 3, we actually create and store strings which have only a temporary life cycle, and make unnecessary string copy operations (i.e., from chars to each parsed string). With memory mapping, the input file has been mapped to process memory. Therefore, we could store the range of a string rather than the string itself for later use. In other words, the aforementioned extensive copy can be reduced to a copy of std::string_view or our [StringRange](https://github.com/jdlph/MIOCSV#a-quick-tour), which is essentially a pair of pointers, and imposes almost zero overhead. For a file with _C_ fields and _m_ lines, it will reduce copy operations from _**O(N)**_ to _**O(mC)**_. This brings a refined overall time bound of _**O(N + mC)**_~_**O(N)**_ given _**mC << N**_ in most cases.
 
-Even _**O(N)**_ is the best time bound over all possible CSV parser implementations, the underlying linear search over chars can be still improved by using [AVX2 Intrinsics](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html). A perfect example is [io::StringReader.fast_find()](https://github.com/wxinix/wxlib/blob/main/mio/include/mio/stringreader.hpp), which illustrates how to load 32 bytes into CPU registers and utilize some special flags to facilitate the search process.
+Even _**O(N)**_ is the best time bound over all possible CSV parser implementations, its underlying linear search over chars can be still improved by using [AVX2 Intrinsics](https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html). A perfect example is [mio::StringReader.fast_find()](https://github.com/wxinix/wxlib/blob/main/mio/include/mio/stringreader.hpp), which illustrates how to load 32 bytes into CPU registers and utilize some special flags to facilitate the search process.
 
 ## Acknowledgement
 This project is inspired by two existing works from the community.
