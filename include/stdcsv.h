@@ -728,15 +728,11 @@ Row Reader::split(const std::string& s) const
 template<typename C>
 Row Reader::split2(const C& c) const
 {
-    if (c.empty())
-        return Row{};
-
-    StringRange<typename C::const_iterator> sr{c.begin()};
-
     Row r;
     auto quoted = false;
+    StringRange<typename C::const_iterator> sr{c.begin()};
 
-    for (auto i = c.begin(), e = c.end(); i != e;)
+    for (auto i = c.begin(), e = c.end();;)
     {
         if (*i == quote)
         {
@@ -755,12 +751,15 @@ Row Reader::split2(const C& c) const
             r.append(sr.to_string());
             sr.reset(++i);
         }
+        else if (i == e)
+        {
+            // last one
+            r.append(sr.to_string());
+            break;
+        }
         else
             sr.extend(++i);
     }
-
-    // last one
-    r.append(sr.to_string());
 
     // use move constructor to avoid copy
     return r;
@@ -776,7 +775,7 @@ Row Reader::split3()
     auto quoted = false;
 
     // caution: the last line might be null terminated rather than '\n'
-    while (*it != lineter && it != it_end)
+    while (true)
     {
         if (*it == quote)
         {
@@ -797,18 +796,20 @@ Row Reader::split3()
         {
             r.append(s);
             s.clear();
-
             ++it;
         }
+        else if (*it == lineter)
+        {
+            // last one
+            r.append(s);
+            ++it;
+            break;
+        }
+        else if (it == it_end)
+            break;
         else
             s.push_back(*it++);
     }
-
-    // last one
-    r.append(s);
-
-    if (it != it_end)
-        ++it;
 
     // use move constructor to avoid copy
     return r;

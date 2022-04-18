@@ -106,18 +106,12 @@ Row MIOReader::parse()
 {
     static constexpr char lineter = '\n';
 
-    if (*it == lineter)
-    {
-        ++it;
-        return Row{};
-    }
-
     Row r;
     auto quoted = false;
     StringRange<const char*> sr{it};
 
     // caution: the last line might be null terminated rather than '\n'
-    while (*it != lineter && semi_branch_expect((it != ms.end()), true))
+    while (true)
     {
         if (*it == quote)
         {
@@ -139,15 +133,18 @@ Row MIOReader::parse()
             r.append(sr.to_string());
             sr.reset(++it);
         }
+        else if (*it == lineter)
+        {
+            // last one
+            r.append(sr.to_string());
+            ++it;
+            break;
+        }
+        else if (semi_branch_expect((it == ms.end()), true))
+            break;
         else
             sr.extend(++it);
     }
-
-    // last one
-    r.append(sr.to_string());
-
-    if (semi_branch_expect((it != ms.end()), true))
-        ++it;
 
     return r;
 }
