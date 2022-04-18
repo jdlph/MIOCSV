@@ -1,7 +1,7 @@
 #ifndef GUARD_STDCSV_H
 #define GUARD_STDCSV_H
 
-#define O3_TIME_BOUND
+#define O3N_TIME_BOUND
 
 #include <algorithm>
 #include <fstream>
@@ -442,7 +442,7 @@ public:
             std::cerr << "invalid input!\n";
             std::terminate();
         }
-#ifdef O3_TIME_BOUND
+#ifdef O3N_TIME_BOUND
         it = ist;
 #endif
     }
@@ -455,7 +455,7 @@ public:
             std::cerr << "invalid input!\n";
             std::terminate();
         }
-#ifdef O3_TIME_BOUND
+#ifdef O3N_TIME_BOUND
         it = ist;
 #endif
     }
@@ -463,14 +463,14 @@ public:
 protected:
     std::ifstream ist;
     const char delim;
-#ifdef O3_TIME_BOUND
+#ifdef O3N_TIME_BOUND
     std::istreambuf_iterator<char> it;
     std::istreambuf_iterator<char> it_end;
 #endif
 
     void iterate() override
     {
-#ifdef O3_TIME_BOUND
+#ifdef O3N_TIME_BOUND
         if (it == it_end)
             throw IterationEnd{};
 #else
@@ -481,7 +481,7 @@ protected:
 
         try
         {
-#ifdef O3_TIME_BOUND
+#ifdef O3N_TIME_BOUND
             row = split3();
 #else
             row = split2(s);
@@ -670,7 +670,7 @@ inline BaseReader::ReaderIterator BaseReader::begin()
     if (this->row_num > 1)
         return nullptr;
 
-    return ReaderIterator(this);
+    return ReaderIterator{this};
 }
 
 inline BaseReader::ReaderIterator BaseReader::end()
@@ -766,7 +766,7 @@ Row Reader::split2(const C& c) const
     return r;
 }
 
-#ifdef O3_TIME_BOUND
+#ifdef O3N_TIME_BOUND
 Row Reader::split3()
 {
     static constexpr char lineter = '\n';

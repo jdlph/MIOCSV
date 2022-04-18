@@ -52,8 +52,8 @@ protected:
 
     void iterate() override
     {
-        // it == nullptr, EOF is reached
-        if (!it)
+        // EOF is reached
+        if (it == ms.end())
             throw IterationEnd{};
 
         try
@@ -148,8 +148,6 @@ Row MIOReader::parse()
 
     if (semi_branch_expect((it != ms.end()), true))
         ++it;
-    else
-        it = nullptr;
 
     return r;
 }
