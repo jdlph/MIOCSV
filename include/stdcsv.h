@@ -56,11 +56,6 @@ public:
         head = tail = it;
     }
 
-    size_type size() const
-    {
-        return tail - head + 1;
-    }
-
     std::string to_string() const
     {
         return std::string{head, tail};
@@ -308,6 +303,11 @@ public:
         return row_num;
     }
 
+protected:
+    const char quote;
+    size_type row_num;
+    Row row;
+
     struct InvalidRow : public std::runtime_error {
         // do we need it?
         InvalidRow() = delete;
@@ -320,11 +320,6 @@ public:
         {
         }
     };
-
-protected:
-    const char quote;
-    size_type row_num;
-    Row row;
 
     class IterationEnd {
 
