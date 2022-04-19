@@ -731,15 +731,12 @@ Row Reader::split2(const C& c) const
     {
         if (*i == quote)
         {
+            sr.extend(++i);
             quoted ^= true;
-            if (!quoted)
+            if (!quoted && *i != quote && *i != delim && i != e)
             {
-                sr.extend(++i);
-                if (*i != quote && *i != delim && i != e)
-                    throw InvalidRow{row_num, sr.to_string()};
+                throw InvalidRow{row_num, sr.to_string()};
             }
-            else
-                sr.extend(++i);
         }
         else if (*i == delim && !quoted)
         {
@@ -774,18 +771,13 @@ Row Reader::split3()
     {
         if (*it == quote)
         {
+            s.push_back(*it++);
             quoted ^= true;
-            if (!quoted)
+            if (!quoted && *it != quote && *it != delim && *it != lineter)
             {
-                s.push_back(*it++);
-                if (*it != quote && *it != delim && *it != lineter)
-                {
-                    ++it = std::find(it, it_end, lineter);
-                    throw Reader::InvalidRow{row_num, s};
-                }
+                ++it = std::find(it, it_end, lineter);
+                throw Reader::InvalidRow{row_num, s};
             }
-            else
-                s.push_back(*it++);
         }
         else if (*it == delim && !quoted)
         {

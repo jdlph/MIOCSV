@@ -115,18 +115,13 @@ Row MIOReader::parse()
     {
         if (*it == quote)
         {
+            sr.extend(++it);
             quoted ^= true;
-            if (!quoted)
+            if (!quoted && *it != quote && *it != delim && *it != lineter)
             {
-                sr.extend(++it);
-                if (*it != quote && *it != delim && *it != lineter)
-                {
-                    ++it = std::find(it, ms.end(), lineter);
-                    throw Reader::InvalidRow{row_num, sr.to_string()};
-                }
+                ++it = std::find(it, ms.end(), lineter);
+                throw Reader::InvalidRow{row_num, sr.to_string()};
             }
-            else
-                sr.extend(++it);
         }
         else if (*it == delim && !quoted)
         {
