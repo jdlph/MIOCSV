@@ -747,14 +747,11 @@ Row Reader::split2(const C& c) const
         {
             // last one
             r.append(sr.to_string());
-            break;
+            return r;
         }
         else
             sr.extend(++i);
     }
-
-    // use move constructor to avoid copy
-    return r;
 }
 
 #ifdef O3N_TIME_BOUND
@@ -790,16 +787,13 @@ Row Reader::split3()
             // last one
             r.append(s);
             ++it;
-            break;
+            return r;
         }
         else if (it == it_end)
-            break;
+            return r;
         else
             s.push_back(*it++);
     }
-
-    // use move constructor to avoid copy
-    return r;
 }
 #endif
 

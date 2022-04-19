@@ -133,15 +133,13 @@ Row MIOReader::parse()
             // last one
             r.append(sr.to_string());
             ++it;
-            break;
+            return r;
         }
         else if (semi_branch_expect((it == ms.end()), true))
-            break;
+            return r;
         else
             sr.extend(++it);
     }
-
-    return r;
 }
 
 } // namespace miocsv
