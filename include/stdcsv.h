@@ -458,10 +458,6 @@ public:
 protected:
     std::ifstream ist;
     const char delim;
-#ifdef O3N_TIME_BOUND
-    std::istreambuf_iterator<char> it;
-    std::istreambuf_iterator<char> it_end;
-#endif
 
     void iterate() override
     {
@@ -494,6 +490,11 @@ protected:
     }
 
 private:
+#ifdef O3N_TIME_BOUND
+    std::istreambuf_iterator<char> it;
+    std::istreambuf_iterator<char> it_end;
+#endif
+
     // for benchmark only
     Row split(const std::string& s) const;
 

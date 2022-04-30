@@ -9,8 +9,8 @@ Facility | Functionality | Core | Dependency | Implementation
 ---------| --------------| -----| ---------- | ---------------
 Reader | parse csv file line by line | std::istreambuf_iterator | C++11 | stdcsv.h
 DictReader | parse csv file with headers line by line | std::istreambuf_iterator | C++11 | stdcsv.h
-MIOReader | parse csv file line by line | memory mapping | mio.hpp and C++20 | miocsv.h
-MIODictReader | parse csv file with headers line by line | memory mapping | mio.hpp and C++20 | miocsv.h
+MIOReader | parse csv file line by line | memory mapping | stdcsv.h, mio.hpp,  and C++20 | miocsv.h
+MIODictReader | parse csv file with headers line by line | memory mapping | stdcsv.h, mio.hpp, and C++20 | miocsv.h
 Writer | write user's data to a local file | std::ofstream operator<< | C++11 | stdcsv.h
 Row | store delimited strings or convert user’s data into strings | variadic template | C++11 | stdcsv.h
 StringRange | define a string range by [head, tail] to facilitate string operations | template | C++11 | stdcsv.h
@@ -189,7 +189,7 @@ We conduct benchmark tests[^4] using a [data set](test/csvreader.csv) with 12 fi
 
 Facility | Reader | DictReader | MIOReader | MIODictReader | Python csv.reader | Python csv.DictReader
 :-------:| :-----:| :---------:| :-------: | :-----------: | :---------------: | :-------------------:
-CPU Time (ms) | 40 | 40 | 23 | 26 | 37 | 124
+CPU Time (ms) | 37 | 38 | 23 | 26 | 37 | 124
 
 [^4]: MacBook Pro (13-inch, 2020), CPU: Intel Core i5-1038NG7, RAM: 16GB 3733MHz LPDDR4X, Hard Drive: 512GB SSD, OS: Monterey 12.3.1, C++ Compiler: Apple clang 12.0.0, Python Interpreter: 3.7.6.
 
@@ -199,7 +199,7 @@ Reader and DictReader can be implemented using std::getline() for simplicity, wh
 
 Facility | Reader (_O(5N)_) | DictReader (_O(5N)_)| std::getline() |
 :-------:| :---------------:| :------------------:| :------------: |
-CPU Time (ms) | 47 | 48 | 16 |
+CPU Time (ms) | 44 | 44 | 16 |
 
 ### Under the Hood
 Parsing a CSV file or a file of any other delimited formats is essentially a linear search over the source file (as a stream of chars) and extract strings separated by the delimiter(s).

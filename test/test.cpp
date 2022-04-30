@@ -16,7 +16,7 @@ void test(DemoCases& tc);
 
 int main()
 {
-    DemoCases tc {std_reader};
+    DemoCases tc {std_dictreader};
 
     test(tc);
 
