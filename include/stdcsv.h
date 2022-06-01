@@ -735,9 +735,7 @@ Row Reader::split2(const C& c) const
             sr.extend(++i);
             quoted ^= true;
             if (!quoted && *i != quote && *i != delim && i != e)
-            {
                 throw InvalidRow{row_num, sr.to_string()};
-            }
         }
         else if (*i == delim && !quoted)
         {
