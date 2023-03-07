@@ -1,3 +1,12 @@
+/**
+ * @file miocsv.h, part of the project MIOCSV under Apache License 2.0
+ * @author jdlph (jdlph@hotmail.com)
+ * @brief A suite of lightening-fast CSV parsers built upon memory mapping (MIO)
+ *
+ * @copyright Copyright (c) 2022 - 2023 Peiheng Li, Ph.D.
+ *
+ */
+
 #ifndef GUARD_MIOCSV_H
 #define GUARD_MIOCSV_H
 

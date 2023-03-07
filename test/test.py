@@ -1,3 +1,11 @@
+"""
+ * @file test.py, part of the project MIOCSV under Apache License 2.0
+ * @author jdlph (jdlph@hotmail.com)
+ * @brief Benchmark reader and DictReader from the Python csv module
+ *
+ * @copyright Copyright (c) 2022 - 2023 Peiheng Li, Ph.D.
+"""
+
 import csv
 from time import time
 from time import sleep

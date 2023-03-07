@@ -1,3 +1,12 @@
+/**
+ * @file demo.cpp, part of the project MIOCSV under Apache License 2.0
+ * @author jdlph (jdlph@hotmail.com)
+ * @brief Use cases of the readers and writer from this project
+ *
+ * @copyright Copyright (c) 2022 - 2023 Peiheng Li, Ph.D.
+ *
+ */
+
 #include <stdcsv.h>
 #include <miocsv.h>
 
