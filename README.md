@@ -136,8 +136,6 @@ int main()
 ```C++
 #include "stdcsv.h"
 
-#include <iostream>
-
 int main()
 {
     auto writer = miocsv::Writer {"output.csv"};
