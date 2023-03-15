@@ -4,7 +4,6 @@
  * @brief A suite of lightening-fast CSV parsers and writer built upon the C++ std facilities
  *
  * @copyright Copyright (c) 2022 - 2023 Peiheng Li, Ph.D.
- *
  */
 
 #ifndef GUARD_STDCSV_H
@@ -591,6 +590,18 @@ public:
 
     ~Writer() = default;
 
+    template<typename T>
+    void append(const T& t, const std::string& sep = ",")
+    {
+        ost << t << sep;
+    }
+
+    template<typename T>
+    void append(T&& t, const std::string& sep = ",")
+    {
+        ost << t << sep;
+    }
+
     /**
      * @brief write a row of records into the file
      *
@@ -637,6 +648,34 @@ public:
             ost << r.back();
 
         ost << '\n';
+    }
+
+    template<typename T>
+    void write_row_raw(const T& t)
+    {
+        ost << t << '\n';
+    }
+
+    template<typename T, typename... Args>
+    void write_row_raw(const T& t, const Args&... args)
+    {
+        ost << t;
+        append_cell(args...);
+        ost << '\n';
+    }
+
+private:
+    template<typename T>
+    void append_cell(const T& t)
+    {
+        ost << delim << t;
+    }
+
+    template<typename T, typename... Args>
+    void append_cell(const T& t, const Args&... args)
+    {
+        append_cell(t);
+        append_cell(args...);
     }
 
 private:
@@ -744,7 +783,9 @@ Row Reader::split2(const C& c) const
             sr.extend(++i);
             quoted ^= true;
             if (!quoted && *i != quote && *i != delim && i != e)
+            {
                 throw InvalidRow{row_num, sr.to_string()};
+            }
         }
         else if (*i == delim && !quoted)
         {
@@ -765,7 +806,8 @@ Row Reader::split2(const C& c) const
 #ifdef O3N_TIME_BOUND
 Row Reader::split3()
 {
-    static constexpr char lineter = '\n';
+    static constexpr char CR = '\r';
+    static constexpr char LF = '\n';
 
     Row r;
     std::string s;
@@ -778,9 +820,9 @@ Row Reader::split3()
         {
             s.push_back(*it++);
             quoted ^= true;
-            if (!quoted && *it != quote && *it != delim && *it != lineter)
+            if (!quoted && *it != quote && *it != delim && *it != LF)
             {
-                ++it = std::find(it, it_end, lineter);
+                ++it = std::find(it, it_end, LF);
                 throw Reader::InvalidRow{row_num, s};
             }
         }
@@ -790,10 +832,14 @@ Row Reader::split3()
             s.clear();
             ++it;
         }
-        else if (*it == lineter)
+        else if (*it == LF)
         {
             // last one
-            r.append(s);
+            if (s.back() != CR)
+                r.append(s);
+            else
+                r.append(std::string{s.begin(), --s.end()});
+
             ++it;
             return r;
         }
