@@ -113,8 +113,6 @@ private:
 
 Row MIOReader::parse()
 {
-    static constexpr char LF = '\n';
-
     Row r;
     auto quoted = false;
     StringRange<const char*> sr{it};
@@ -140,7 +138,11 @@ Row MIOReader::parse()
         else if (*it == LF)
         {
             // last one
-            r.append(sr.to_string());
+            if (sr.back() != CR)
+                r.append(sr.to_string());
+            else
+                r.append(sr.to_string_cr());
+
             ++it;
             return r;
         }
