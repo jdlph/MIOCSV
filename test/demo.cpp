@@ -23,7 +23,7 @@ void demo(DemoCases& tc);
 
 int main()
 {
-    DemoCases tc {std_reader};
+    DemoCases tc {mio_reader};
     demo(tc);
 
     std::cout << "demo done!\n";

@@ -48,6 +48,11 @@ public:
 
     ~StringRange() = default;
 
+    char back() const
+    {
+        return *(tail - 1);
+    }
+
     bool empty() const
     {
         return tail == head;
@@ -66,12 +71,16 @@ public:
 
     std::string to_string() const
     {
-        return std::string{head, tail};
+        if (back() != CR)
+            return std::string{head, tail};
+
+        return std::string{head, tail - 1};
     }
 
 private:
     InputIter head;
     InputIter tail;
+    const char CR = '\r';
 };
 
 class Row {

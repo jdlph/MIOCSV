@@ -113,7 +113,7 @@ private:
 
 Row MIOReader::parse()
 {
-    static constexpr char lineter = '\n';
+    static constexpr char LF = '\n';
 
     Row r;
     auto quoted = false;
@@ -126,9 +126,9 @@ Row MIOReader::parse()
         {
             sr.extend(++it);
             quoted ^= true;
-            if (!quoted && *it != quote && *it != delim && *it != lineter)
+            if (!quoted && *it != quote && *it != delim && *it != LF)
             {
-                ++it = std::find(it, ms.end(), lineter);
+                ++it = std::find(it, ms.end(), LF);
                 throw Reader::InvalidRow{row_num, sr.to_string()};
             }
         }
@@ -137,7 +137,7 @@ Row MIOReader::parse()
             r.append(sr.to_string());
             sr.reset(++it);
         }
-        else if (*it == lineter)
+        else if (*it == LF)
         {
             // last one
             r.append(sr.to_string());
