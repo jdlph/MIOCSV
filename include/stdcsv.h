@@ -321,7 +321,9 @@ public:
     }
 
 protected:
+    const char CR = '\r';
     const char quote;
+
     size_type row_num;
     Row row;
 
@@ -510,6 +512,8 @@ private:
 #ifdef O3N_TIME_BOUND
     std::istreambuf_iterator<char> it;
     std::istreambuf_iterator<char> it_end;
+
+    const char LF = '\n';
 #endif
 
     // for benchmark only
@@ -770,9 +774,19 @@ Row Reader::split(const std::string& s) const
 
     // last one
     if (!s1.empty())
-        r.append(s1);
+    {
+        if (s1.back() != CR)
+            r.append(s1);
+        else
+            r.append(std::string{s1.begin(), --s1.end()});
+    }
     else
-        r.append(std::string{b, s.end()});
+    {
+        if (s.back() != CR)
+            r.append(std::string{b, s.end()});
+        else
+            r.append(std::string{b, --s.end()});
+    }
 
     // use move constructor to avoid copy
     return r;
@@ -815,9 +829,6 @@ Row Reader::split2(const C& c) const
 #ifdef O3N_TIME_BOUND
 Row Reader::split3()
 {
-    static constexpr char CR = '\r';
-    static constexpr char LF = '\n';
-
     Row r;
     std::string s;
     auto quoted = false;
