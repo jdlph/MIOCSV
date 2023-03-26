@@ -155,9 +155,9 @@ int main()
 }
 ```
 
-Writer::write_row() is designed to automatically handle strings with the delimiter (e.g., ',' for CSV). One example will be "a sentence has default delimiter in the end,". It will be quoted and written as ""a sentence has default delimiter in the end,"" in the output file. However, this automatic handling does come at a cost, which involves a linear search for the delimiter each time write_row() is executed. It could incur significant overhead if there are enormous rows to be written. Therefore, we provide two additional APIs, Writer::write_row_raw() and Writer::append() to bypass this linear search.
+Writer::write_row() is designed to automatically handle strings with the delimiter (e.g., ',' for CSV), The first record in r from the above code snippet is one example. It will be **quoted** and written as *""1st way to write a record include string, int, and double""* in the output file. However, it comes at a cost, which triggers a linear search for the delimiter each time write_row() is executed. It could incur significant overhead if there are enormous rows to be written. Therefore, we provide two additional APIs, Writer::write_row_raw() and Writer::append() to bypass this linear search.
 
-Writer::write_row_raw() takes a row and outputs as is, while Writer::append() takes a cell of row and outputs as is. They are about **1.5x faster** than Writer::write_row(). The use cases are illustrated below. Note that users need to make sure that each cell in a row has no delimiter. Otherwise, a problematic CSV file with invalid rows or inconsistent number of records will be generated. See the following section on Exception Handlings for details.
+Writer::write_row_raw() takes a row and outputs as is, while Writer::append() appends a record of row to the output file. As there are no forgoing linear search, they are generally **1.5x faster** than Writer::write_row(). **Note that** users need to make sure that each cell in a row has NO delimiter. Otherwise, a problematic CSV file with invalid rows or inconsistent number of records may be generated. See the following section on Exception Handlings for details.
 
 ```C++
 #include "stdcsv.h"
@@ -173,16 +173,14 @@ int main()
     writer.append("a sentence has no delimiter");
     writer.append("string");
     writer.append(2);
-    // supplement with "\n" (rather than \n') to indicate this is the last cell or end of the line
+    // supplement with "\n" (rather than '\n') to indicate this is the last record (end of the line)
     writer.append(2.0, "\n");
 
     return 0;
 }
 ```
 
-Writer::append() can take any valid string as a separator with "," (rather than ',') as the default. This enables appending new context to an existing cell with Writer::append(). If you have cells involving a lot of string concatenations, it will be ideal to avoid the computational overhead.
-
-The following code snippet shows a simplified case outputting geometric information. The whole example can be found at [TransOMS](https://github.com/jdlph/TransOMS/blob/main/src/utils.cpp).
+Writer::append() can take any valid string as a separator, where the default is "," (rather than ','). This enables appending new context to an existing record via Writer::append(). If you have records involving a lot of string concatenations, this API will be ideal to avoid the computational overhead. The following code snippet shows a simplified case regarding geometric information. Its [original application](https://github.com/jdlph/TransOMS/blob/main/src/utils.cpp) has to dynamically construct / concatenate each record from the coordinate of each node along a path at runtime.
 
 ```C++
 int main()
