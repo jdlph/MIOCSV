@@ -2,8 +2,7 @@
 
 [![platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-red)](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-red)
 
-A [MIO](https://github.com/wxinix/wxlib/tree/main/mio)-bsased C++ library to read and write tabular data in CSV format. Our goal is to develop a suite of fast and easy-to-use CSV readers and writer similar to the [csv module](https://docs.python.org/3/library/csv.html#module-csv) from the Python standard library. It serves as our first step to [rebuild DTALite using modern C++](https://github.com/jdlph/openDTA).
-
+A [MIO](https://github.com/wxinix/wxlib/tree/main/mio)-bsased C++ library to read and write tabular data in CSV format. Our goal is to develop a suite of fast and easy-to-use CSV readers and writer similar to the [csv module](https://docs.python.org/3/library/csv.html#module-csv) from the Python standard library. It serves as our first step to [rebuild DTALite using modern C++](https://github.com/jdlph/TransOMS).
 ## A Quick Tour
 Four readers and one writer are provided along with two supporting data structures.
 
@@ -18,6 +17,9 @@ Row | store delimited strings or convert user’s data into strings | variadic t
 StringRange | define a string range by [head, tail] to facilitate string operations | template | C++11 | stdcsv.h
 
 ### Getting Started
+
+We start with some simple examples to illustrate its APIs and use cases. See [TransOMS](https://github.com/jdlph/TransOMS/blob/main/src/utils.cpp) for its real-world application.
+
 ***Use Reader***
 ```C++
 #include "stdcsv.h"
@@ -153,6 +155,55 @@ int main()
 }
 ```
 
+Writer::write_row() is designed to automatically handle strings with the delimiter (e.g., ',' for CSV). One example will be "a sentence has default delimiter in the end,". It will be quoted and written as ""a sentence has default delimiter in the end,"" in the output file. However, this automatic handling does come at a cost, which involves a linear search for the delimiter each time write_row() is executed. It could incur significant overhead if there are enormous rows to be written. Therefore, we provide two additional APIs, Writer::write_row_raw() and Writer::append() to bypass this linear search.
+
+Writer::write_row_raw() takes a row and outputs as is, while Writer::append() takes a cell of row and outputs as is. They are about **1.5x faster** than Writer::write_row(). The use cases are illustrated below. Note that users need to make sure that each cell in a row has no delimiter. Otherwise, a problematic CSV file with invalid rows or inconsistent number of records will be generated. See the following section on Exception Handlings for details.
+
+```C++
+#include "stdcsv.h"
+
+int main()
+{
+    auto writer = miocsv::Writer {"output.csv"};
+
+    // make sure each cell does not have the delimiter
+    writer.write_row_raw("a sentence has no delimiter", "string", 1, 1.1);
+
+    // the equivalent but verbose way will be
+    writer.append("a sentence has no delimiter");
+    writer.append("string");
+    writer.append(2);
+    // supplement with "\n" (rather than \n') to indicate this is the last cell or end of the line
+    writer.append(2.0, "\n");
+
+    return 0;
+}
+```
+
+Writer::append() can take any valid string as a separator with "," (rather than ',') as the default. This enables appending new context to an existing cell with Writer::append(). If you have cells involving a lot of string concatenations, it will be ideal to avoid the computational overhead.
+
+The following code snippet shows a simplified case outputting geometric information. The whole example can be found at [TransOMS](https://github.com/jdlph/TransOMS/blob/main/src/utils.cpp).
+
+```C++
+int main()
+{
+    auto writer = miocsv::Writer {"output.csv"};
+
+    // LINESTRING (712300.000000 1855600.000000;711700.000000 1855000.000000)
+
+    writer.append("\"LINESTRING (", "");
+    writer.append(712300.000000, " ");
+    writer.append(1855600.000000, ";");
+    writer.append(711700.000000, " ");
+    writer.append(1855000.000000, ")\"\n");
+
+    // it is equivalent to the following line if you know this geo information in the first place
+    writer.write_row_raw(LINESTRING (712300.000000 1855600.000000;711700.000000 1855000.000000));
+
+    return 0;
+}
+```
+
 ### Exception Handlings
 
 Consistency in number of records over rows (i.e., lines) is not enforced (see [RFC4180](https://www.rfc-editor.org/rfc/rfc4180.txt) for details). No warning or exception will be triggered unless it is one of the followings.
@@ -252,8 +303,8 @@ Even _**O(N)**_ is the best time bound over all possible CSV parser implementati
 
 ## Acknowledgement
 This project is inspired by two existing works from the community.
-* [mio::StringReader.getline()](https://github.com/wxinix/wxlib/blob/main/mio/include/mio/stringreader.hpp). Thanks to Dr. Wuping Xin for making this master piece!
-* The parsing algorithm from [CSVparser](https://github.com/rsylvian/CSVparser)[^5]. Thanks to its original author for this elegant procedure!
+* [mio::StringReader.getline()](https://github.com/wxinix/wxlib/blob/master/mio/stringreader.hpp). Thanks to [Dr. Wuping Xin](https://github.com/wxinix) for making this master piece!
+* The parsing algorithm from [CSVparser](https://github.com/rsylvian/CSVparser)[^5]. Thanks to its [Romain Sylvian](https://github.com/rsylvian) for this elegant procedure!
 
 Besides, we would like to thank Dr. Wuping Xin for his valuable suggestions and comments towards this project, which lead to improvement in both its appearance and performance.
 
