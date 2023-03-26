@@ -18,7 +18,7 @@ StringRange | define a string range by [head, tail] to facilitate string operati
 
 ### Getting Started
 
-We start with some simple examples to illustrate its APIs and use cases. See [TransOMS](https://github.com/jdlph/TransOMS/blob/main/src/utils.cpp) for its real-world application.
+We start with some simple examples to illustrate its APIs and use cases. Please see [TransOMS](https://github.com/jdlph/TransOMS/blob/main/src/utils.cpp) for its real-world application.
 
 ***Use Reader***
 ```C++
@@ -155,9 +155,9 @@ int main()
 }
 ```
 
-Writer::write_row() is designed to automatically handle strings with the delimiter (e.g., ',' for CSV), The first record in r from the above code snippet is one example. It will be **quoted** and written as *""1st way to write a record include string, int, and double""* in the output file. However, it comes at a cost, which triggers a linear search for the delimiter each time write_row() is executed. It could incur significant overhead if there are enormous rows to be written. Therefore, we provide two additional APIs, Writer::write_row_raw() and Writer::append() to bypass this linear search.
+Writer::write_row() is designed to automatically handle strings with the delimiter (e.g., ',' for CSV), The first record in r from the above code snippet is one example. It will be **quoted** and written as *""1st way to write a record include string, int, and double""* in the output file. However, it comes at a cost, which triggers a linear search for the delimiter each time when write_row() is executed. It could incur significant overhead if there are enormous rows to be written. Therefore, we provide two additional APIs, Writer::write_row_raw() and Writer::append() to bypass this linear search.
 
-Writer::write_row_raw() takes a row and outputs as is, while Writer::append() appends a record of row to the output file. As there are no forgoing linear search, they are generally **1.5x faster** than Writer::write_row(). **Note that** users need to make sure that each cell in a row has NO delimiter. Otherwise, a problematic CSV file with invalid rows or inconsistent number of records may be generated. See the following section on Exception Handlings for details.
+Writer::write_row_raw() takes a row but outputs as is, while Writer::append() appends a record of row to the output file. As there is no forgoing linear search, they are generally **1.5x faster** than Writer::write_row(). **Note that** users need to make sure that each record in a row has NO delimiter. Otherwise, a problematic CSV file with invalid rows or inconsistent number of records may be generated. See the following [Exception Handlings](#exception-handlings) for details.
 
 ```C++
 #include "stdcsv.h"
@@ -166,21 +166,22 @@ int main()
 {
     auto writer = miocsv::Writer {"output.csv"};
 
-    // make sure each cell does not have the delimiter
+    // write a row as is. users need to make sure each cell does not have the delimiter
     writer.write_row_raw("a sentence has no delimiter", "string", 1, 1.1);
 
-    // the equivalent but verbose way will be
+    // the equivalent but verbose way will be appending record by record
     writer.append("a sentence has no delimiter");
     writer.append("string");
     writer.append(2);
-    // supplement with "\n" (rather than '\n') to indicate this is the last record (end of the line)
+    // supplement with "\n" (rather than '\n') to indicate this is the last record
+    // (i.e., end of the line)
     writer.append(2.0, "\n");
 
     return 0;
 }
 ```
 
-Writer::append() can take any valid string as a separator, where the default is "," (rather than ','). This enables appending new context to an existing record via Writer::append(). If you have records involving a lot of string concatenations, this API will be ideal to avoid the computational overhead. The following code snippet shows a simplified case regarding geometric information. Its [original application](https://github.com/jdlph/TransOMS/blob/main/src/utils.cpp) has to dynamically construct / concatenate each record from the coordinate of each node along a path at runtime.
+Writer::append() can take any valid string as a separator, where the default is "," (rather than ','). This enables appending any new context to an existing record. If you have records involving a lot of string concatenations, this API will be ideal to avoid the potential computational overhead. The following code snippet shows a simplified case regarding geographic information. Its [original application](https://github.com/jdlph/TransOMS/blob/main/src/utils.cpp) has to dynamically construct millions of geographic records by concatenating coordinates at runtime.
 
 ```C++
 int main()
@@ -196,7 +197,7 @@ int main()
     writer.append(1855000.000000, ")\"\n");
 
     // it is equivalent to the following line if you know this geo information in the first place
-    writer.write_row_raw(LINESTRING (712300.000000 1855600.000000;711700.000000 1855000.000000));
+    writer.write_row_raw("LINESTRING (712300.000000 1855600.000000;711700.000000 1855000.000000)");
 
     return 0;
 }
