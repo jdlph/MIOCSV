@@ -611,19 +611,39 @@ public:
      * @note need to make sure that the context has NO delimiter
      *
      * @param t a const reference of typename T
-     * @param sep separator, which could be any valid string with "," as the
-     * default
+     * @param sep separator, which could be any valid char. its default is ',' as
+     * for csv files.
      */
     template<typename T>
-    void append(const T& t, const std::string& sep = ",")
+    void append(const T& t, const char sep = ',')
     {
         ost << t << sep;
     }
 
     template<typename T>
-    void append(T&& t, const std::string& sep = ",")
+    void append(T&& t, const char sep = ',')
     {
         ost << t << sep;
+    }
+
+    /**
+     * @brief append context into the file
+     *
+     * @note need to make sure that the context has NO delimiter
+     *
+     * @param t a const reference of typename T
+     * @param str any valid string.
+     */
+    template<typename T>
+    void append(const T& t, const std::string& str)
+    {
+        ost << t << str;
+    }
+
+    template<typename T>
+    void append(T&& t, const std::string& str)
+    {
+        ost << t << str;
     }
 
     /**

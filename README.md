@@ -173,15 +173,15 @@ int main()
     writer.append("a sentence has no delimiter");
     writer.append("string");
     writer.append(2);
-    // supplement with "\n" (rather than '\n') to indicate this is the last record
+    // supplement with than '\n' to indicate this is the last record
     // (i.e., end of the line)
-    writer.append(2.0, "\n");
+    writer.append(2.0, '\n');
 
     return 0;
 }
 ```
 
-Writer::append() can take any valid string as a separator, where the default is "," (rather than ','). This enables appending any new context to an existing record. If you have records involving a lot of string concatenations, this API will be ideal to avoid the potential computational overhead. The following code snippet shows a simplified case regarding geographic information. Its [original application](https://github.com/jdlph/TransOMS/blob/main/src/utils.cpp) has to dynamically construct millions of geographic records by concatenating coordinates at runtime.
+Writer::append() can take any valid char or string as a separator, where the default is ','. This enables appending any new context to an existing record. If you have records involving a lot of string concatenations, this API will be ideal to avoid the potential computational overhead. The following code snippet shows a simplified case regarding geographic information. Its [original application](https://github.com/jdlph/TransOMS/blob/main/src/utils.cpp) has to dynamically construct millions of geographic records by concatenating coordinates at runtime.
 
 ```C++
 int main()
@@ -192,7 +192,7 @@ int main()
 
     writer.append("\"LINESTRING (", "");
     writer.append(712300.000000, " ");
-    writer.append(1855600.000000, ";");
+    writer.append(1855600.000000, ';');
     writer.append(711700.000000, " ");
     writer.append(1855000.000000, ")\"\n");
 
