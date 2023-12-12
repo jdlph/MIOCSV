@@ -85,6 +85,24 @@ private:
     InputIter tail;
 };
 
+/**
+ * @brief a custom exception which arises when a nonexistent field is retrieved
+ * via Row::[] (i.e., no such a field in the header)
+ */
+struct NoRecord : public std::runtime_error {
+    NoRecord() = delete;
+
+    explicit NoRecord(const std::string& s)
+        : std::runtime_error{"Row::operator[]: " + s + " is nonexistent"}
+    {
+    }
+
+    explicit NoRecord(size_type s)
+        : std::runtime_error{"Row::operator[]: " + std::to_string(s) + " is out of range"}
+    {
+    }
+};
+
 class Row {
     friend void attach_fieldnames(Row&, const FieldNames*, size_type);
     friend std::ostream& operator<<(std::ostream&, const Row&);
@@ -124,7 +142,7 @@ public:
 
     std::string& operator[](size_type i)
     {
-        if (i < 0 || i >= records.size())
+        if (i >= records.size())
             throw NoRecord{i};
 
         return records[i];
@@ -132,7 +150,7 @@ public:
 
     const std::string& operator[](size_type i) const
     {
-        if (i < 0 || i >= records.size())
+        if (i >= records.size())
             throw NoRecord{i};
 
         return records[i];
@@ -254,20 +272,6 @@ private:
     // reserved for DictReader
     const FieldNames* fns = nullptr;
 
-    struct NoRecord : public std::runtime_error {
-        NoRecord() = delete;
-
-        explicit NoRecord(const std::string& s)
-            : std::runtime_error{"Row::operator[] at " + s}
-        {
-        }
-
-        explicit NoRecord(size_type s)
-            : std::runtime_error{"Row::operator[] at " + std::to_string(s)}
-        {
-        }
-    };
-
     template<typename T>
     void convert_to_string(const T& t)
     {
@@ -337,7 +341,7 @@ protected:
 
         InvalidRow(size_type row_num, const std::string& str)
             : std::runtime_error{"CAUTION: Invalid Row at line "
-                                 + std::to_string(row_num + 1)
+                                 + std::to_string(++row_num)
                                  + "! Value is not allowed after quoted field: "
                                  + str}
         {
@@ -457,7 +461,7 @@ public:
     {
         if (!ist)
         {
-            std::cerr << "invalid input!\n";
+            std::cerr << "invalid input! no " << ist_ << '\n';
             std::terminate();
         }
 #ifdef O3N_TIME_BOUND
@@ -470,7 +474,7 @@ public:
     {
         if (!ist)
         {
-            std::cerr << "invalid input!\n";
+            std::cerr << "invalid input! no " << ist_ << '\n';
             std::terminate();
         }
 #ifdef O3N_TIME_BOUND
@@ -582,7 +586,7 @@ public:
     {
         if (!ost)
         {
-            std::cerr << "invalid input!\n";
+            std::cerr << "invalid input! no " << ost_ << '\n';
             std::terminate();
         }
     }
@@ -592,7 +596,7 @@ public:
     {
         if (!ost)
         {
-            std::cerr << "invalid input!\n";
+            std::cerr << "invalid input! no " << ost_ << '\n';
             std::terminate();
         }
     }
@@ -774,8 +778,8 @@ void attach_fieldnames(Row& r, const FieldNames* fns, size_type row_num)
     if (r.fns->size() != r.size())
     {
         std::cout << "CAUTION: Data Inconsistency at line " << row_num
-                    << ": " << r.fns->size() << " fieldnames vs. "
-                    << r.size() << " fields\n";
+                  << ": " << r.fns->size() << " fieldnames vs. "
+                  << r.size() << " fields\n";
     }
 }
 
@@ -945,6 +949,44 @@ Row Reader::split3()
     }
 }
 #endif
+
+/**
+ * @brief a utility function to split string according to the given delimiter
+ *
+ * @param c string container, which could be std::string or std::string_view
+ * @param delim a single character delimiter, such as ',', ';', and so on
+ */
+template<typename C>
+Row split(const C& c, const char delim = ',')
+{
+    static constexpr char quote = '"';
+
+    Row r;
+    auto quoted = false;
+    StringRange<typename C::const_iterator> sr{c.begin()};
+
+    for (auto i = c.begin(), e = c.end();;)
+    {
+        if (*i == quote)
+        {
+            sr.extend(++i);
+            quoted ^= true;
+        }
+        else if (*i == delim && !quoted)
+        {
+            r.append(sr.to_string());
+            sr.reset(++i);
+        }
+        else if (i == e)
+        {
+            // last one
+            r.append(sr.to_string());
+            return r;
+        }
+        else
+            sr.extend(++i);
+    }
+}
 
 } // namespace miocsv
 
