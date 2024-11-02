@@ -3,7 +3,7 @@
  * @author jdlph (jdlph@hotmail.com)
  * @brief Benchmark reader and DictReader from the Python csv module
  *
- * @copyright Copyright (c) 2022 - 2023 Peiheng Li, Ph.D.
+ * @copyright Copyright (c) 2022 - 2024 Peiheng Li, Ph.D.
 """
 
 import csv
@@ -13,7 +13,7 @@ from time import sleep, time
 def test_reader():
     ts = time()
 
-    with open('csvreader.csv', 'r') as f:
+    with open('data/csvreader.csv', 'r') as f:
         reader = csv.reader(f)
 
         for line in reader:
@@ -30,7 +30,7 @@ def test_dictreader():
 
     ts = time()
 
-    with open('csvreader.csv', 'r') as f:
+    with open('data/csvreader.csv', 'r') as f:
         reader = csv.DictReader(f)
 
         for line in reader:

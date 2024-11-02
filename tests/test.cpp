@@ -3,7 +3,7 @@
  * @author jdlph (jdlph@hotmail.com)
  * @brief Benchmark the readers and writer from this project
  *
- * @copyright Copyright (c) 2022 - 2023 Peiheng Li, Ph.D.
+ * @copyright Copyright (c) 2022 - 2024 Peiheng Li, Ph.D.
  *
  */
 
@@ -37,7 +37,7 @@ int main()
 void test_Reader()
 {
     auto ts = std::chrono::high_resolution_clock::now();
-    auto reader = miocsv::Reader {"csvreader.csv"};
+    auto reader = miocsv::Reader {"data/csvreader.csv"};
 
     for (const auto& line: reader)
     {
@@ -54,7 +54,7 @@ void test_Reader()
 void test_DictReader()
 {
     auto ts = std::chrono::high_resolution_clock::now();
-    auto reader = miocsv::DictReader {"csvreader.csv"};
+    auto reader = miocsv::DictReader {"data/csvreader.csv"};
 
     for (const auto& line: reader)
     {
@@ -71,7 +71,7 @@ void test_DictReader()
 void test_MIOReader()
 {
     auto ts = std::chrono::high_resolution_clock::now();
-    auto mioreader = miocsv::MIOReader {"csvreader.csv"};
+    auto mioreader = miocsv::MIOReader {"data/csvreader.csv"};
 
     for (const auto& line: mioreader)
     {
@@ -88,7 +88,7 @@ void test_MIOReader()
 void test_MIODictReader()
 {
     auto ts = std::chrono::high_resolution_clock::now();
-    auto mioreader = miocsv::MIODictReader {"csvreader.csv"};
+    auto mioreader = miocsv::MIODictReader {"data/csvreader.csv"};
 
     for (const auto& line: mioreader)
     {
@@ -105,7 +105,7 @@ void test_MIODictReader()
 void test_getline()
 {
     auto ts = std::chrono::high_resolution_clock::now();
-    std::ifstream ist {"csvreader.csv"};
+    std::ifstream ist {"data/csvreader.csv"};
 
     auto line_num = 0;
     for (std::string s; std::getline(ist, s); ++line_num)

@@ -276,23 +276,23 @@ For a file with _N_ chars, this implementation involves two almost identical lin
 
 There are several data copy operations going around with this implementation as illustrated by the following figure.
 
-![Regular CSV Parser](pic/regular1.png)
+![Regular CSV Parser](docs/images/regular1.png)
 
 The last one can be avoided by passing the container as a pointer or a reference on the heap memory, e.g., [CSVparser](https://github.com/rsylvian/CSVparser). However, it might impose additional risk of memory leak.
 
 C++11 introduced moving semantics, which can helps us bypass it as well as Copy 4 without the side effect.
 
-![Enhanced CSV Parser](pic/regular2.png)
+![Enhanced CSV Parser](docs/images/regular2.png)
 
 Note that the string involved in Copy 2 and Copy 3 does nothing but only serves an intermediate media from buffered chars and the parsed substrings. Once its substrings are parsed, it becomes useless, and will be discarded while we are moving to the next line.
 
 So why construct such a string object from the first beginning which only incurs unnecessary copy operation and additional cost on memory allocation? Why not pass its range as a pair of begin and end iterators which is equivalent but much more efficient (almost zero overhead)? To remove this copy operation, we can either build a customer string range type ([StringRange](https://github.com/jdlph/MIOCSV#a-quick-tour)) or simply adopt std::string_view (C++17). This will lead to the following enhanced implementation bounded by _**O(3N)**_, which is also the default implementation for Reader and DictReader.
 
-![Our Regular CSV Parser](pic/regular3.png)
+![Our Regular CSV Parser](docs/images/regular3.png)
 
 With memory mapping presented before, the first copy operation is dropped as well. At this point, it leaves us with one and only one copy directly from chars in the file to the parsed substrings in conjunction with the single linear search, which indicates a tight time bound of _**O(2N)**_.
 
-![Our MIO-Based CSV Parser](pic/mio.png)
+![Our MIO-Based CSV Parser](docs/images/mio.png)
 
 ### Furthermore
 
