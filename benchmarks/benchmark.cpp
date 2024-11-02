@@ -14,7 +14,7 @@
 
 void run_Reader()
 {
-    auto reader = miocsv::Reader {"data/csvreader.csv"};
+    auto reader = miocsv::Reader {DATA_PATH '/' + "csvreader.csv"};
     for (const auto& line: reader)
     {
         // do nothing
