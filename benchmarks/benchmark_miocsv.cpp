@@ -12,9 +12,9 @@
 #include <stdcsv.h>
 #include <miocsv.h>
 
-void run_Reader(const std::string& filename)
+void run_Reader()
 {
-    auto reader = miocsv::Reader {DATA_PATH "/" + filename};
+    auto reader = miocsv::Reader {INPUT_FILE};
     for (const auto& line: reader)
     {
         // do nothing
@@ -23,7 +23,7 @@ void run_Reader(const std::string& filename)
 
 void run_DictReader()
 {
-    auto reader = miocsv::DictReader {"data/csvreader.csv"};
+    auto reader = miocsv::DictReader {INPUT_FILE};
     for (const auto& line: reader)
     {
         // do nothing
@@ -32,7 +32,7 @@ void run_DictReader()
 
 void run_MIOReader()
 {
-    auto mioreader = miocsv::MIOReader {"data/csvreader.csv"};
+    auto mioreader = miocsv::MIOReader {INPUT_FILE};
     for (const auto& line: mioreader)
     {
         // do nothing
@@ -41,7 +41,7 @@ void run_MIOReader()
 
 void run_MIODictReader()
 {
-    auto mioreader = miocsv::MIODictReader {"data/csvreader.csv"};
+    auto mioreader = miocsv::MIODictReader {INPUT_FILE};
     for (const auto& line: mioreader)
     {
         // do nothing
@@ -50,7 +50,7 @@ void run_MIODictReader()
 
 void run_getline()
 {
-    std::ifstream ist {"data/csvreader.csv"};
+    std::ifstream ist {INPUT_FILE};
     for (std::string s; std::getline(ist, s);)
     {
         // do nothing
@@ -60,7 +60,7 @@ void run_getline()
 static void BM_run_Reader(benchmark::State& state)
 {
     for (auto _ : state)
-        run_Reader("csvreader.csv");
+        run_Reader();
 }
 
 static void BM_run_DictReader(benchmark::State& state)
@@ -88,7 +88,6 @@ static void BM_run_getline(benchmark::State& state)
 }
 
 constexpr auto ITERATION_NUM = 20;
-// constexpr auto filename = DATA_PATH "/csvreader.csv";
 
 BENCHMARK(BM_run_Reader)->Iterations(ITERATION_NUM);
 BENCHMARK(BM_run_MIOReader)->Iterations(ITERATION_NUM);
