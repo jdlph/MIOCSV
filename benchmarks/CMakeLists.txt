@@ -1,4 +1,6 @@
-add_executable(benchmark benchmark.cpp)
+find_package(benchmark REQUIRED)
 
-target_link_libraries(benchmark PRIVATE benchmark::benmark)
-target_compile_definitions(benchmark PRIVATE DATA_PATH=${DATA_DIR})
+add_executable(mytest benchmark.cpp)
+
+target_link_libraries(mytest PRIVATE benchmark::benchmark)
+target_compile_definitions(mytest PRIVATE DATA_PATH="${DATA_DIR}")

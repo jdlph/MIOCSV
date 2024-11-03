@@ -1,12 +1,8 @@
-cmake_minimum_required (VERSION 3.10)
-
-include("cmake/HunterGate.cmake")
-HunterGate(
-    URL "https://github.com/cpp-pm/hunter/archive/v0.23.297.tar.gz"
-    SHA1 "3319fe6a3b08090df7df98dee75134d68e2ef5a3"
-)
+cmake_minimum_required (VERSION 3.18)
 
 project ("miocsv")
+
+# find_package(LLVM REQUIRED CONFIG)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -15,13 +11,23 @@ set(DATA_DIR ${PROJECT_SOURCE_DIR}/data)
 
 include_directories(include)
 
-# hunter_add_package(GTest)
-hunter_add_package(benchmark)
+include(FetchContent)
 
-find_package(GTest REQUIRED)
-find_package(benchmark REQUIRED)
+FetchContent_Declare(
+  googletest
+  GIT_REPOSITORY https://github.com/google/googletest.git
+  GIT_TAG release-1.10.0
+)
 
-enable_testing()
+FetchContent_Declare(
+        benchmark
+        GIT_REPOSITORY "https://github.com/google/benchmark.git"
+        GIT_TAG v1.5.0
+)
+
+FetchContent_MakeAvailable(googletest benchmark)
+
+# enable_testing()
 # add_subdirectory(tests)
 
 add_subdirectory(benchmarks)

@@ -12,9 +12,9 @@
 #include <stdcsv.h>
 #include <miocsv.h>
 
-void run_Reader()
+void run_Reader(const std::string& filename)
 {
-    auto reader = miocsv::Reader {DATA_PATH '/' + "csvreader.csv"};
+    auto reader = miocsv::Reader {DATA_PATH "/" + filename};
     for (const auto& line: reader)
     {
         // do nothing
@@ -60,7 +60,7 @@ void run_getline()
 static void BM_run_Reader(benchmark::State& state)
 {
     for (auto _ : state)
-        run_Reader();
+        run_Reader("csvreader.csv");
 }
 
 static void BM_run_DictReader(benchmark::State& state)
