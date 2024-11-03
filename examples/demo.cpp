@@ -33,7 +33,7 @@ int main()
 
 void demo_Reader()
 {
-    auto reader = miocsv::Reader {"data/irregular.csv"};
+    auto reader = miocsv::Reader {"data/regular.csv"};
 
     // use range-for loop to print out the first 10 lines
     for (const auto& line: reader)

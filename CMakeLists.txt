@@ -20,7 +20,7 @@ include(FetchContent)
 FetchContent_Declare(
     googletest
     GIT_REPOSITORY https://github.com/google/googletest.git
-    GIT_TAG release-1.10.0
+    GIT_TAG v1.14.0
 )
 
 # v1.5.0 does not work with googletest 1.10.0
@@ -36,11 +36,13 @@ include_directories(include)
 
 option(ENABLE_TESTING "Enable testing" ON)
 if (ENABLE_TESTING)
+    message("-- testing enabled")
     enable_testing()
     add_subdirectory(tests)
 endif()
 
 option(ENABLE_BENCHMARKS "Enable benchmarks" ON)
 if (ENABLE_BENCHMARKS)
+    message("-- benchmark enabled")
     add_subdirectory(benchmarks)
 endif()
