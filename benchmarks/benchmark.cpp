@@ -88,6 +88,7 @@ static void BM_run_getline(benchmark::State& state)
 }
 
 constexpr auto ITERATION_NUM = 20;
+// constexpr auto filename = DATA_PATH "/csvreader.csv";
 
 BENCHMARK(BM_run_Reader)->Iterations(ITERATION_NUM);
 BENCHMARK(BM_run_MIOReader)->Iterations(ITERATION_NUM);
