@@ -3,257 +3,239 @@
 #include <stdcsv.h>
 #include <miocsv.h>
 
+#include <iostream>
 #include <string>
+#include <vector>
 
-// Demonstrate some basic assertions.
-TEST(HelloTest, BasicAssertions) {
-  // Expect two strings not to be equal.
-  EXPECT_STRNE("hello", "world");
-  // Expect equality.
-  EXPECT_EQ(7 * 6, 42);
+std::vector<std::string> headers {
+    "name",
+    "link_id",
+    "from_node_id",
+    "to_node_id",
+    "facility_type",
+    "dir_flag",
+    "length",
+    "lanes",
+    "capacity",
+    "free_speed",
+    "link_type",
+    "cost",
+    "VDF_fftt1",
+    "VDF_cap1",
+    "VDF_alpha1",
+    "VDF_beta1",
+    "VDF_theta1",
+    "VDF_gamma1",
+    "VDF_mu1",
+    "RUC_rho1",
+    "RUC_resource1",
+    "RUC_type"
+};
+
+std::vector<std::string> row1 {
+    "",
+    "1",
+    "1",
+    "547",
+    "Highway",
+    "1",
+    "0.86267",
+    "1",
+    "49500",
+    "60",
+    "1",
+    "0",
+    "0.86267",
+    "49500",
+    "0.15",
+    "4",
+    "1",
+    "1",
+    "100",
+    "10",
+    "0",
+    "1"
+};
+
+std::vector<std::string> row2 {
+    "",
+    "1024",
+    "554",
+    "437",
+    "Highway",
+    "1",
+    "1.037",
+    "1",
+    "4000",
+    "60",
+    "1",
+    "0",
+    "1.037",
+    "4000",
+    "0.15",
+    "4",
+    "1",
+    "1",
+    "100",
+    "10",
+    "0",
+    "1"
+};
+
+std::vector<std::string> row3 {
+    "",
+    "2950",
+    "933",
+    "534",
+    "Highway",
+    "1",
+    "6.10762",
+    "1",
+    "3500",
+    "60",
+    "1",
+    "0",
+    "6.10762",
+    "3500",
+    "0.15",
+    "4",
+    "1",
+    "1",
+    "100",
+    "10",
+    "0",
+    "1"
+};
+
+void compare_line(const miocsv::Row& parsed_line, const std::vector<std::string>& expected_line)
+{
+    ASSERT_EQ(parsed_line.size(), expected_line.size());
+    for (miocsv::size_type i = 0, sz = parsed_line.size(); i != sz; ++i)
+    {
+        EXPECT_EQ(parsed_line[i], expected_line[i]);
+    }
+
+    ASSERT_THROW(parsed_line[parsed_line.size()], miocsv::NoRecord);
 }
 
-TEST(MIOCSV, Reader) 
+void compare_line(const miocsv::Row& parsed_line)
 {
-    auto reader = miocsv::Reader {INPUT_FILE};
+    EXPECT_EQ(parsed_line[0], parsed_line["name"]);
+    EXPECT_EQ(parsed_line[1], parsed_line["link_id"]);
+    EXPECT_EQ(parsed_line[2], parsed_line["from_node_id"]);
+    EXPECT_EQ(parsed_line[3], parsed_line["to_node_id"]);
+    EXPECT_EQ(parsed_line[4], parsed_line["facility_type"]);
+    EXPECT_EQ(parsed_line[5], parsed_line["dir_flag"]);
+    EXPECT_EQ(parsed_line[6], parsed_line["length"]);
+    EXPECT_EQ(parsed_line[7], parsed_line["lanes"]);
+    EXPECT_EQ(parsed_line[8], parsed_line["capacity"]);
+    EXPECT_EQ(parsed_line[9], parsed_line["free_speed"]);
+    EXPECT_EQ(parsed_line[10], parsed_line["link_type"]);
+    EXPECT_EQ(parsed_line[11], parsed_line["cost"]);
+    EXPECT_EQ(parsed_line[12], parsed_line["VDF_fftt1"]);
+    EXPECT_EQ(parsed_line[13], parsed_line["VDF_cap1"]);
+    EXPECT_EQ(parsed_line[14], parsed_line["VDF_alpha1"]);
+    EXPECT_EQ(parsed_line[15], parsed_line["VDF_beta1"]);
+    EXPECT_EQ(parsed_line[16], parsed_line["VDF_theta1"]);
+    EXPECT_EQ(parsed_line[17], parsed_line["VDF_gamma1"]);
+    EXPECT_EQ(parsed_line[18], parsed_line["VDF_mu1"]);
+    EXPECT_EQ(parsed_line[19], parsed_line["RUC_rho1"]);
+    EXPECT_EQ(parsed_line[20], parsed_line["RUC_resource1"]);
+    EXPECT_EQ(parsed_line[21], parsed_line["RUC_type"]);
+}
+
+void compare_content(miocsv::BaseReader* p)
+{
+    auto& reader = *p;
     for (const auto& line: reader)
     {
         auto row_num = reader.get_row_num();
         ASSERT_LE(row_num, 2951);
 
-        if (row_num == 0) 
+        if (row_num == 0)
         {
-            EXPECT_EQ(line[0], "name");
-            EXPECT_EQ(line[1], "link_id");
-            EXPECT_EQ(line[2], "from_node_id");
-            EXPECT_EQ(line[3], "to_node_id");
-            EXPECT_EQ(line[4], "facility_type");
-            EXPECT_EQ(line[5], "dir_flag");
-            EXPECT_EQ(line[6], "length");
-            EXPECT_EQ(line[7], "lanes");
-            EXPECT_EQ(line[8], "capacity");
-            EXPECT_EQ(line[9], "free_speed");
-            EXPECT_EQ(line[10], "link_type");
-            EXPECT_EQ(line[11], "cost");
-            EXPECT_EQ(line[12], "VDF_fftt1");
-            EXPECT_EQ(line[13], "VDF_cap1");
-            EXPECT_EQ(line[14], "VDF_alpha1");
-            EXPECT_EQ(line[15], "VDF_beta1");
-            EXPECT_EQ(line[16], "VDF_theta1");
-            EXPECT_EQ(line[17], "VDF_gamma1");
-            EXPECT_EQ(line[18], "VDF_mu1");
-            EXPECT_EQ(line[19], "RUC_rho1");
-            EXPECT_EQ(line[20], "RUC_resource1");
-            EXPECT_EQ(line[21], "RUC_type");
-
-            ASSERT_THROW(line[22], miocsv::NoRecord);
+            compare_line(line, headers);
         }
 
         if (row_num == 1)
         {
-            EXPECT_EQ(line[0], "");
-            EXPECT_EQ(line[1], "1");
-            EXPECT_EQ(line[2], "1");
-            EXPECT_EQ(line[3], "547");
-            EXPECT_EQ(line[4], "Highway");
-            EXPECT_EQ(line[5], "1");
-            EXPECT_EQ(line[6], "0.86267");
-            EXPECT_EQ(line[7], "1");
-            EXPECT_EQ(line[8], "49500");
-            EXPECT_EQ(line[9], "60");
-            EXPECT_EQ(line[10], "1");
-            EXPECT_EQ(line[11], "0");
-            EXPECT_EQ(line[12], "0.86267");
-            EXPECT_EQ(line[13], "49500");
-            EXPECT_EQ(line[14], "0.15");
-            EXPECT_EQ(line[15], "4");
-            EXPECT_EQ(line[16], "1");
-            EXPECT_EQ(line[17], "1");
-            EXPECT_EQ(line[18], "100");
-            EXPECT_EQ(line[19], "10");
-            EXPECT_EQ(line[20], "0");
-            EXPECT_EQ(line[21], "1");
-
-            ASSERT_THROW(line[22], miocsv::NoRecord);
+            compare_line(line, row1);
         }
 
         if (row_num == 1024)
         {
-            EXPECT_EQ(line[0], "");
-            EXPECT_EQ(line[1], "1024");
-            EXPECT_EQ(line[2], "554");
-            EXPECT_EQ(line[3], "437");
-            EXPECT_EQ(line[4], "Highway");
-            EXPECT_EQ(line[5], "1");
-            EXPECT_EQ(line[6], "1.037");
-            EXPECT_EQ(line[7], "1");
-            EXPECT_EQ(line[8], "4000");
-            EXPECT_EQ(line[9], "60");
-            EXPECT_EQ(line[10], "1");
-            EXPECT_EQ(line[11], "0");
-            EXPECT_EQ(line[12], "1.037");
-            EXPECT_EQ(line[13], "4000");
-            EXPECT_EQ(line[14], "0.15");
-            EXPECT_EQ(line[15], "4");
-            EXPECT_EQ(line[16], "1");
-            EXPECT_EQ(line[17], "1");
-            EXPECT_EQ(line[18], "100");
-            EXPECT_EQ(line[19], "10");
-            EXPECT_EQ(line[20], "0");
-            EXPECT_EQ(line[21], "1");
-
-            ASSERT_THROW(line[22], miocsv::NoRecord);
+            compare_line(line, row2);
         }
 
-        if (row_num == 1024)
+        if (row_num == 2590)
         {
-            EXPECT_EQ(line[0], "");
-            EXPECT_EQ(line[1], "2950");
-            EXPECT_EQ(line[2], "933");
-            EXPECT_EQ(line[3], "534");
-            EXPECT_EQ(line[4], "Highway");
-            EXPECT_EQ(line[5], "1");
-            EXPECT_EQ(line[6], "6.10762");
-            EXPECT_EQ(line[7], "1");
-            EXPECT_EQ(line[8], "3500");
-            EXPECT_EQ(line[9], "60");
-            EXPECT_EQ(line[10], "1");
-            EXPECT_EQ(line[11], "0");
-            EXPECT_EQ(line[12], "6.10762");
-            EXPECT_EQ(line[13], "3500");
-            EXPECT_EQ(line[14], "0.15");
-            EXPECT_EQ(line[15], "4");
-            EXPECT_EQ(line[16], "1");
-            EXPECT_EQ(line[17], "1");
-            EXPECT_EQ(line[18], "100");
-            EXPECT_EQ(line[19], "10");
-            EXPECT_EQ(line[20], "0");
-            EXPECT_EQ(line[21], "1");
-
-            ASSERT_THROW(line[22], miocsv::NoRecord);
+            compare_line(line, row3);
         }
     }
+}
+
+void compare_content(miocsv::BaseDictReader* p)
+{
+    auto& reader = *p;
+
+    std::stringstream ss;
+    ss << reader.get_fieldnames();
+
+    const std::string headers =
+        "name,link_id,from_node_id,to_node_id,facility_type,dir_flag,length,lanes,capacity,free_"
+        "speed,link_type,cost,VDF_fftt1,VDF_cap1,VDF_alpha1,VDF_beta1,VDF_theta1,VDF_gamma1,VDF_"
+        "mu1,RUC_rho1,RUC_resource1,RUC_type";
+
+    ASSERT_EQ(ss.str(), headers);
+
+    for (const auto& line: reader)
+    {
+        auto row_num = reader.get_row_num();
+        ASSERT_LE(row_num, 2951);
+
+        if (row_num == 0)
+        {
+            compare_line(line, row1);
+            compare_line(line);
+        }
+
+        if (row_num == 1024)
+        {
+            compare_line(line, row2);
+            compare_line(line);
+        }
+
+        if (row_num == 2590)
+        {
+            compare_line(line, row3);
+            compare_line(line);
+        }
+    }
+}
+
+TEST(MIOCSV, Reader)
+{
+    auto reader = miocsv::Reader {INPUT_FILE};
+    compare_content(&reader);
 }
 
 TEST(MIOCSV, DictReader)
 {
-    const auto headers = "name,link_id,from_node_id,to_node_id,facility_type,dir_flag,length,lanes,capacity,free_speed,link_type,cost,VDF_fftt1,VDF_cap1,VDF_alpha1,VDF_beta1,VDF_theta1,VDF_gamma1,VDF_mu1,RUC_rho1,RUC_resource1,RUC_type";
     auto reader = miocsv::DictReader {INPUT_FILE};
-    ASSERT_EQ(reader.get_fieldnames().str(), headers);
-    
-    for (const auto& line: reader)
-    {
-        auto row_num = reader.get_row_num();
-        ASSERT_LE(row_num, 2951);
-        
-        if (row_num == 1)
-        {
-            EXPECT_EQ(line[0], "");
-            EXPECT_EQ(line[1], "1");
-            EXPECT_EQ(line[2], "1");
-            EXPECT_EQ(line[3], "547");
-            EXPECT_EQ(line[4], "Highway");
-            EXPECT_EQ(line[5], "1");
-            EXPECT_EQ(line[6], "0.86267");
-            EXPECT_EQ(line[7], "1");
-            EXPECT_EQ(line[8], "49500");
-            EXPECT_EQ(line[9], "60");
-            EXPECT_EQ(line[10], "1");
-            EXPECT_EQ(line[11], "0");
-            EXPECT_EQ(line[12], "0.86267");
-            EXPECT_EQ(line[13], "49500");
-            EXPECT_EQ(line[14], "0.15");
-            EXPECT_EQ(line[15], "4");
-            EXPECT_EQ(line[16], "1");
-            EXPECT_EQ(line[17], "1");
-            EXPECT_EQ(line[18], "100");
-            EXPECT_EQ(line[19], "10");
-            EXPECT_EQ(line[20], "0");
-            EXPECT_EQ(line[21], "1");
+    compare_content(&reader);
+}
 
-            ASSERT_THROW(line[22], miocsv::NoRecord);
-            ASSERT_THROW(line["no_such_header"], miocsv::NoRecord);
-        }
+TEST(MIOCSV, MIOReader)
+{
+    auto reader = miocsv::MIOReader {INPUT_FILE};
+    compare_content(&reader);
 
-        if (row_num == 1024)
-        {
-            EXPECT_EQ(line[0], "");
-            EXPECT_EQ(line[1], "1024");
-            EXPECT_EQ(line[2], "554");
-            EXPECT_EQ(line[3], "437");
-            EXPECT_EQ(line[4], "Highway");
-            EXPECT_EQ(line[5], "1");
-            EXPECT_EQ(line[6], "1.037");
-            EXPECT_EQ(line[7], "1");
-            EXPECT_EQ(line[8], "4000");
-            EXPECT_EQ(line[9], "60");
-            EXPECT_EQ(line[10], "1");
-            EXPECT_EQ(line[11], "0");
-            EXPECT_EQ(line[12], "1.037");
-            EXPECT_EQ(line[13], "4000");
-            EXPECT_EQ(line[14], "0.15");
-            EXPECT_EQ(line[15], "4");
-            EXPECT_EQ(line[16], "1");
-            EXPECT_EQ(line[17], "1");
-            EXPECT_EQ(line[18], "100");
-            EXPECT_EQ(line[19], "10");
-            EXPECT_EQ(line[20], "0");
-            EXPECT_EQ(line[21], "1");
+}
 
-            ASSERT_THROW(line[22], miocsv::NoRecord);
-        }
-
-        if (row_num == 1024)
-        {
-            EXPECT_EQ(line[0], "");
-            EXPECT_EQ(line[1], "2950");
-            EXPECT_EQ(line[2], "933");
-            EXPECT_EQ(line[3], "534");
-            EXPECT_EQ(line[4], "Highway");
-            EXPECT_EQ(line[5], "1");
-            EXPECT_EQ(line[6], "6.10762");
-            EXPECT_EQ(line[7], "1");
-            EXPECT_EQ(line[8], "3500");
-            EXPECT_EQ(line[9], "60");
-            EXPECT_EQ(line[10], "1");
-            EXPECT_EQ(line[11], "0");
-            EXPECT_EQ(line[12], "6.10762");
-            EXPECT_EQ(line[13], "3500");
-            EXPECT_EQ(line[14], "0.15");
-            EXPECT_EQ(line[15], "4");
-            EXPECT_EQ(line[16], "1");
-            EXPECT_EQ(line[17], "1");
-            EXPECT_EQ(line[18], "100");
-            EXPECT_EQ(line[19], "10");
-            EXPECT_EQ(line[20], "0");
-            EXPECT_EQ(line[21], "1");
-
-            ASSERT_THROW(line[22], miocsv::NoRecord);
-        }
-
-        EXPECT_EQ(line[0], line["name"]);
-        EXPECT_EQ(line[1], line["link_id"]);
-        EXPECT_EQ(line[2], line["from_node_id"]);
-        EXPECT_EQ(line[3], line["to_node_id"]);
-        EXPECT_EQ(line[4], line["facility_type"]);
-        EXPECT_EQ(line[5], line["dir_flag"]);
-        EXPECT_EQ(line[6], line["length"]);
-        EXPECT_EQ(line[7], line["lanes"]);
-        EXPECT_EQ(line[8], line["capacity"]);
-        EXPECT_EQ(line[9], line["free_speed"]);
-        EXPECT_EQ(line[10], line["link_type"]);
-        EXPECT_EQ(line[11], line["cost"]);
-        EXPECT_EQ(line[12], line["VDF_fftt1"]);
-        EXPECT_EQ(line[13], line["VDF_cap1"]);
-        EXPECT_EQ(line[14], line["VDF_alpha1"]);
-        EXPECT_EQ(line[15], line["VDF_beta1"]);
-        EXPECT_EQ(line[16], line["VDF_theta1"]);
-        EXPECT_EQ(line[17], line["VDF_gamma1"]);
-        EXPECT_EQ(line[18], line["VDF_mu1"]);
-        EXPECT_EQ(line[19], line["RUC_rho1"]);
-        EXPECT_EQ(line[20], line["RUC_resource1"]);
-        EXPECT_EQ(line[21], line["RUC_type"]);
-    }
+TEST(MIOCSV, MIODictReader)
+{
+    auto reader = miocsv::MIODictReader {INPUT_FILE};
+    compare_content(&reader);
 }
 
 // test irregular csv file
