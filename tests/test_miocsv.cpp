@@ -115,6 +115,7 @@ void compare_line(const miocsv::Row& parsed_line, const std::vector<std::string>
         EXPECT_EQ(parsed_line[i], expected_line[i]);
     }
 
+    ASSERT_THROW(parsed_line[-1], miocsv::NoRecord);
     ASSERT_THROW(parsed_line[parsed_line.size()], miocsv::NoRecord);
 }
 
@@ -152,25 +153,17 @@ void compare_content(miocsv::BaseReader* p)
         auto row_num = reader.get_row_num();
         ASSERT_LE(row_num, 2951);
 
-        if (row_num == 0)
-        {
-            compare_line(line, headers);
-        }
-
         if (row_num == 1)
-        {
+            compare_line(line, headers);
+
+        if (row_num == 2)
             compare_line(line, row1);
-        }
 
-        if (row_num == 1024)
-        {
+        if (row_num == 1025)
             compare_line(line, row2);
-        }
 
-        if (row_num == 2590)
-        {
+        if (row_num == 2951)
             compare_line(line, row3);
-        }
     }
 }
 
@@ -193,19 +186,19 @@ void compare_content(miocsv::BaseDictReader* p)
         auto row_num = reader.get_row_num();
         ASSERT_LE(row_num, 2951);
 
-        if (row_num == 0)
+        if (row_num == 1)
         {
             compare_line(line, row1);
             compare_line(line);
         }
 
-        if (row_num == 1024)
+        if (row_num == 1025)
         {
             compare_line(line, row2);
             compare_line(line);
         }
 
-        if (row_num == 2590)
+        if (row_num == 2951)
         {
             compare_line(line, row3);
             compare_line(line);
@@ -229,7 +222,6 @@ TEST(MIOCSV, MIOReader)
 {
     auto reader = miocsv::MIOReader {INPUT_FILE};
     compare_content(&reader);
-
 }
 
 TEST(MIOCSV, MIODictReader)
@@ -238,17 +230,6 @@ TEST(MIOCSV, MIODictReader)
     compare_content(&reader);
 }
 
-// test irregular csv file
-// all the readers can run without interruptions
-
-// test regular.csv
-// 1. verify headers
-// 2. verify the first row
-// 3. verify one row from the middle
-// 4. verify the last row
-
-// test support for CRLF (Windows) and LF (Linux and macOS)
-
-// test Row::operator[] Out of Range
-
-// test writer?
+// to do:
+// 1. test irregular csv file
+// 2. test support for CRLF (Windows) and LF (Linux and macOS)
