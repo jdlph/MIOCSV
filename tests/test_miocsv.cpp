@@ -1,13 +1,15 @@
-#include <gtest/gtest.h>
-
 #include <stdcsv.h>
 #include <miocsv.h>
+
+#include <gtest/gtest.h>
 
 #include <iostream>
 #include <string>
 #include <vector>
 
-std::vector<std::string> headers {
+namespace test_miocsv
+{
+const std::vector<std::string> PARSED_HEADERS {
     "name",
     "link_id",
     "from_node_id",
@@ -32,7 +34,7 @@ std::vector<std::string> headers {
     "RUC_type"
 };
 
-std::vector<std::string> row1 {
+const std::vector<std::string> PARSED_ROW1 {
     "",
     "1",
     "1",
@@ -57,7 +59,7 @@ std::vector<std::string> row1 {
     "1"
 };
 
-std::vector<std::string> row2 {
+const std::vector<std::string> PARSED_ROW2 {
     "",
     "1024",
     "554",
@@ -82,7 +84,7 @@ std::vector<std::string> row2 {
     "1"
 };
 
-std::vector<std::string> row3 {
+const std::vector<std::string> PARSED_ROW3 {
     "",
     "2950",
     "933",
@@ -154,16 +156,16 @@ void compare_content(miocsv::BaseReader* p)
         ASSERT_LE(row_num, 2951);
 
         if (row_num == 1)
-            compare_line(line, headers);
+            compare_line(line, PARSED_HEADERS);
 
         if (row_num == 2)
-            compare_line(line, row1);
+            compare_line(line, PARSED_ROW1);
 
         if (row_num == 1025)
-            compare_line(line, row2);
+            compare_line(line, PARSED_ROW2);
 
         if (row_num == 2951)
-            compare_line(line, row3);
+            compare_line(line, PARSED_ROW3);
     }
 }
 
@@ -174,12 +176,12 @@ void compare_content(miocsv::BaseDictReader* p)
     std::stringstream ss;
     ss << reader.get_fieldnames();
 
-    const std::string headers =
+    static const std::string RAW_HEADERS =
         "name,link_id,from_node_id,to_node_id,facility_type,dir_flag,length,lanes,capacity,free_"
         "speed,link_type,cost,VDF_fftt1,VDF_cap1,VDF_alpha1,VDF_beta1,VDF_theta1,VDF_gamma1,VDF_"
         "mu1,RUC_rho1,RUC_resource1,RUC_type";
 
-    ASSERT_EQ(ss.str(), headers);
+    ASSERT_EQ(ss.str(), RAW_HEADERS);
 
     for (const auto& line: reader)
     {
@@ -188,19 +190,19 @@ void compare_content(miocsv::BaseDictReader* p)
 
         if (row_num == 1)
         {
-            compare_line(line, row1);
+            compare_line(line, PARSED_ROW1);
             compare_line(line);
         }
 
         if (row_num == 1025)
         {
-            compare_line(line, row2);
+            compare_line(line, PARSED_ROW2);
             compare_line(line);
         }
 
         if (row_num == 2951)
         {
-            compare_line(line, row3);
+            compare_line(line, PARSED_ROW3);
             compare_line(line);
         }
     }
@@ -230,6 +232,40 @@ TEST(MIOCSV, MIODictReader)
     compare_content(&reader);
 }
 
+void test_Reader(const std::string& filename)
+{
+    auto reader = miocsv::Reader {filename};
+    compare_content(&reader);
+}
+
+void test_DictReader(const std::string& filename)
+{
+    auto reader = miocsv::DictReader {filename};
+    compare_content(&reader);
+}
+
+void test_MIOReader(const std::string& filename)
+{
+    auto reader = miocsv::MIOReader {filename};
+    compare_content(&reader);
+}
+
+void test_MIODictReader(const std::string& filename)
+{
+    auto reader = miocsv::MIODictReader {filename};
+    compare_content(&reader);
+}
+
+void test_all_readers(const std::string& filename)
+{
+    test_Reader(filename);
+    test_DictReader(filename);
+    test_MIOReader(filename);
+    test_MIODictReader(filename);
+}
+
 // to do:
 // 1. test irregular csv file
 // 2. test support for CRLF (Windows) and LF (Linux and macOS)
+
+} // namespace test_miocsv
