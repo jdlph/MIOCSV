@@ -8,9 +8,7 @@
 #include <vector>
 
 /**
- * @brief TO DO
- * 1. test irregular csv file
- * 2. test writer
+ * @brief TO DO : test writer
  */
 
 namespace test_miocsv
@@ -246,6 +244,42 @@ void test_all_readers(const std::string& filename)
     test_MIODictReader(filename);
 }
 
+void parse_through_Reader(const std::string& filename)
+{
+    auto reader = miocsv::Reader {filename};
+    for (const auto& line : reader)
+    {
+        // do nothing
+    }
+}
+
+void parse_through_DictReader(const std::string& filename)
+{
+    auto reader = miocsv::DictReader {filename};
+    for (const auto& line : reader)
+    {
+        // do nothing
+    }
+}
+
+void parse_through_MIOReader(const std::string& filename)
+{
+    auto reader = miocsv::MIOReader {filename};
+    for (const auto& line : reader)
+    {
+        // do nothing
+    }
+}
+
+void parse_through_MIODictReader(const std::string& filename)
+{
+    auto reader = miocsv::MIODictReader {filename};
+    for (const auto& line : reader)
+    {
+        // do nothing
+    }
+}
+
 bool sniff_cr(const std::string& filename)
 {
     static constexpr char CR = '\r';
@@ -265,7 +299,7 @@ bool sniff_cr(const std::string& filename)
     }
     else if (s.empty())
         return false;
-    
+
     return s.back() == CR;
 }
 
@@ -277,22 +311,40 @@ class MIOCSVTest : public ::testing::TestWithParam<TestCase> {
 
 };
 
+INSTANTIATE_TEST_SUITE_P(
+    MIOCSV,
+    MIOCSVTest,
+    ::testing::Values(TestCase{TEST_FILE}, TestCase{TEST_FILE_CRLF})
+);
+
 TEST_P(MIOCSVTest, AllReaders)
 {
     TestCase tc = GetParam();
     test_all_readers(tc.filename);
 }
 
-INSTANTIATE_TEST_SUITE_P(
-    MIOCSV,
-    MIOCSVTest,
-    ::testing::Values(TestCase{INPUT_FILE}, TestCase{INPUT_FILE_CRLF})
-);
-
 TEST(MIOCSV, SniffEOL)
 {
-    ASSERT_FALSE(sniff_cr(INPUT_FILE));
-    ASSERT_TRUE(sniff_cr(INPUT_FILE_CRLF));
+    ASSERT_FALSE(sniff_cr(TEST_FILE));
+    ASSERT_TRUE(sniff_cr(TEST_FILE_CRLF));
+}
+
+TEST(MIOCSV, NoSuchFile)
+{
+    std::string filename {"mock.csv"};
+
+    ASSERT_DEATH(miocsv::Reader{filename}, "invalid input! no mock.csv");
+    ASSERT_DEATH(miocsv::DictReader{filename}, "invalid input! no mock.csv");
+    ASSERT_THROW(miocsv::MIOReader{filename}, std::system_error);
+    ASSERT_THROW(miocsv::MIODictReader{filename}, std::system_error);
+}
+
+TEST(MIOCSV, IllCSV)
+{
+    ASSERT_NO_THROW(parse_through_Reader(ILL_FILE));
+    ASSERT_NO_THROW(parse_through_DictReader(ILL_FILE));
+    ASSERT_NO_THROW(parse_through_MIOReader(ILL_FILE));
+    ASSERT_NO_THROW(parse_through_MIODictReader(ILL_FILE));
 }
 
 } // namespace test_miocsv
