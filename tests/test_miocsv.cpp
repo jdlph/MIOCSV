@@ -7,6 +7,12 @@
 #include <string>
 #include <vector>
 
+/**
+ * @brief TO DO
+ * 1. test irregular csv file
+ * 2. test writer
+ */
+
 namespace test_miocsv
 {
 const std::vector<std::string> PARSED_HEADERS {
@@ -208,30 +214,6 @@ void compare_content(miocsv::BaseDictReader* p)
     }
 }
 
-TEST(MIOCSV, Reader)
-{
-    auto reader = miocsv::Reader {INPUT_FILE};
-    compare_content(&reader);
-}
-
-TEST(MIOCSV, DictReader)
-{
-    auto reader = miocsv::DictReader {INPUT_FILE};
-    compare_content(&reader);
-}
-
-TEST(MIOCSV, MIOReader)
-{
-    auto reader = miocsv::MIOReader {INPUT_FILE};
-    compare_content(&reader);
-}
-
-TEST(MIOCSV, MIODictReader)
-{
-    auto reader = miocsv::MIODictReader {INPUT_FILE};
-    compare_content(&reader);
-}
-
 void test_Reader(const std::string& filename)
 {
     auto reader = miocsv::Reader {filename};
@@ -264,8 +246,53 @@ void test_all_readers(const std::string& filename)
     test_MIODictReader(filename);
 }
 
-// to do:
-// 1. test irregular csv file
-// 2. test support for CRLF (Windows) and LF (Linux and macOS)
+bool sniff_cr(const std::string& filename)
+{
+    static constexpr char CR = '\r';
+
+    std::ifstream ist {filename};
+    if (!ist)
+    {
+        std::cerr << "invalid input! no " << filename << '\n';
+        std::terminate();
+    }
+
+    std::string s;
+    if (!std::getline(ist, s))
+    {
+        std::cerr << "EOF has reached for" << filename << '\n';
+        std::terminate();
+    }
+    else if (s.empty())
+        return false;
+    
+    return s.back() == CR;
+}
+
+struct TestCase {
+    std::string filename;
+};
+
+class MIOCSVTest : public ::testing::TestWithParam<TestCase> {
+
+};
+
+TEST_P(MIOCSVTest, AllReaders)
+{
+    TestCase tc = GetParam();
+    test_all_readers(tc.filename);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    MIOCSV,
+    MIOCSVTest,
+    ::testing::Values(TestCase{INPUT_FILE}, TestCase{INPUT_FILE_CRLF})
+);
+
+TEST(MIOCSV, SniffEOL)
+{
+    ASSERT_FALSE(sniff_cr(INPUT_FILE));
+    ASSERT_TRUE(sniff_cr(INPUT_FILE_CRLF));
+}
 
 } // namespace test_miocsv
