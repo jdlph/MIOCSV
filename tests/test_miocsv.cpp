@@ -113,7 +113,7 @@ const std::vector<std::string> PARSED_ROW3 {
     "1"
 };
 
-void compare_line(const miocsv::Row& parsed_line, const std::vector<std::string>& expected_line)
+void compare(const miocsv::Row& parsed_line, const std::vector<std::string>& expected_line)
 {
     ASSERT_EQ(parsed_line.size(), expected_line.size());
     for (miocsv::size_type i = 0, sz = parsed_line.size(); i != sz; ++i)
@@ -125,7 +125,7 @@ void compare_line(const miocsv::Row& parsed_line, const std::vector<std::string>
     ASSERT_THROW(parsed_line[parsed_line.size()], miocsv::NoRecord);
 }
 
-void compare_line(const miocsv::Row& parsed_line)
+void compare(const miocsv::Row& parsed_line)
 {
     EXPECT_EQ(parsed_line[0], parsed_line["name"]);
     EXPECT_EQ(parsed_line[1], parsed_line["link_id"]);
@@ -151,7 +151,7 @@ void compare_line(const miocsv::Row& parsed_line)
     EXPECT_EQ(parsed_line[21], parsed_line["RUC_type"]);
 }
 
-void compare_content(miocsv::BaseReader* p)
+void validate_parsed_content(miocsv::BaseReader* p)
 {
     auto& reader = *p;
     for (const auto& line: reader)
@@ -160,20 +160,20 @@ void compare_content(miocsv::BaseReader* p)
         ASSERT_LE(row_num, 2951);
 
         if (row_num == 1)
-            compare_line(line, PARSED_HEADERS);
+            compare(line, PARSED_HEADERS);
 
         if (row_num == 2)
-            compare_line(line, PARSED_ROW1);
+            compare(line, PARSED_ROW1);
 
         if (row_num == 1025)
-            compare_line(line, PARSED_ROW2);
+            compare(line, PARSED_ROW2);
 
         if (row_num == 2951)
-            compare_line(line, PARSED_ROW3);
+            compare(line, PARSED_ROW3);
     }
 }
 
-void compare_content(miocsv::BaseDictReader* p)
+void validate_parsed_content(miocsv::BaseDictReader* p)
 {
     auto& reader = *p;
 
@@ -194,54 +194,54 @@ void compare_content(miocsv::BaseDictReader* p)
 
         if (row_num == 1)
         {
-            compare_line(line, PARSED_ROW1);
-            compare_line(line);
+            compare(line, PARSED_ROW1);
+            compare(line);
         }
 
         if (row_num == 1025)
         {
-            compare_line(line, PARSED_ROW2);
-            compare_line(line);
+            compare(line, PARSED_ROW2);
+            compare(line);
         }
 
         if (row_num == 2951)
         {
-            compare_line(line, PARSED_ROW3);
-            compare_line(line);
+            compare(line, PARSED_ROW3);
+            compare(line);
         }
     }
 }
 
-void test_Reader(const std::string& filename)
+void validate_Reader(const std::string& filename)
 {
     auto reader = miocsv::Reader {filename};
-    compare_content(&reader);
+    validate_parsed_content(&reader);
 }
 
-void test_DictReader(const std::string& filename)
+void validate_DictReader(const std::string& filename)
 {
     auto reader = miocsv::DictReader {filename};
-    compare_content(&reader);
+    validate_parsed_content(&reader);
 }
 
-void test_MIOReader(const std::string& filename)
+void validate_MIOReader(const std::string& filename)
 {
     auto reader = miocsv::MIOReader {filename};
-    compare_content(&reader);
+    validate_parsed_content(&reader);
 }
 
-void test_MIODictReader(const std::string& filename)
+void validate_MIODictReader(const std::string& filename)
 {
     auto reader = miocsv::MIODictReader {filename};
-    compare_content(&reader);
+    validate_parsed_content(&reader);
 }
 
-void test_all_readers(const std::string& filename)
+void validate_all_readers(const std::string& filename)
 {
-    test_Reader(filename);
-    test_DictReader(filename);
-    test_MIOReader(filename);
-    test_MIODictReader(filename);
+    validate_Reader(filename);
+    validate_DictReader(filename);
+    validate_MIOReader(filename);
+    validate_MIODictReader(filename);
 }
 
 void parse_through_Reader(const std::string& filename)
@@ -303,34 +303,36 @@ bool sniff_cr(const std::string& filename)
     return s.back() == CR;
 }
 
-struct TestCase {
+struct EOLCase {
     std::string filename;
 };
 
-class MIOCSVTest : public ::testing::TestWithParam<TestCase> {
+class EOLTest : public testing::TestWithParam<EOLCase> {
 
 };
 
+// TEST_FILE (test.csv) is '\n' terminated while TEST_FILE_CRLF(test_CRLF) is '\r\n' terminated
 INSTANTIATE_TEST_SUITE_P(
-    MIOCSV,
     MIOCSVTest,
-    ::testing::Values(TestCase{TEST_FILE}, TestCase{TEST_FILE_CRLF})
+    EOLTest,
+    testing::Values(EOLCase{TEST_FILE}, EOLCase{TEST_FILE_CRLF})
 );
 
-TEST_P(MIOCSVTest, AllReaders)
+TEST_P(EOLTest, AllReadersRunSeamlessly)
 {
-    TestCase tc = GetParam();
-    test_all_readers(tc.filename);
+    EOLCase ec = GetParam();
+    validate_all_readers(ec.filename);
 }
 
-TEST(MIOCSV, SniffEOL)
+TEST(MIOCSVTest, SniffEOL)
 {
     ASSERT_FALSE(sniff_cr(TEST_FILE));
     ASSERT_TRUE(sniff_cr(TEST_FILE_CRLF));
 }
 
-TEST(MIOCSV, NoSuchFile)
+TEST(MIOCSVTest, FileNotFound)
 {
+    // there is no such mock.csv file
     std::string filename {"mock.csv"};
 
     ASSERT_DEATH(miocsv::Reader{filename}, "invalid input! no mock.csv");
@@ -339,12 +341,12 @@ TEST(MIOCSV, NoSuchFile)
     ASSERT_THROW(miocsv::MIODictReader{filename}, std::system_error);
 }
 
-TEST(MIOCSV, IllCSV)
+TEST(MIOCSVTest, ParseThroughIllFormedFile)
 {
-    ASSERT_NO_THROW(parse_through_Reader(ILL_FILE));
-    ASSERT_NO_THROW(parse_through_DictReader(ILL_FILE));
-    ASSERT_NO_THROW(parse_through_MIOReader(ILL_FILE));
-    ASSERT_NO_THROW(parse_through_MIODictReader(ILL_FILE));
+    ASSERT_NO_THROW(parse_through_Reader(ILLFORMED_FILE));
+    ASSERT_NO_THROW(parse_through_DictReader(ILLFORMED_FILE));
+    ASSERT_NO_THROW(parse_through_MIOReader(ILLFORMED_FILE));
+    ASSERT_NO_THROW(parse_through_MIODictReader(ILLFORMED_FILE));
 }
 
 } // namespace test_miocsv

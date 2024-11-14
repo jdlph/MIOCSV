@@ -33,7 +33,7 @@ int main()
 
 void demo_Reader()
 {
-    auto reader = miocsv::Reader {"data/regular.csv"};
+    auto reader = miocsv::Reader {"data/test.csv"};
 
     // use range-for loop to print out the first 10 lines
     for (const auto& line: reader)
@@ -52,7 +52,7 @@ void demo_Reader()
 
 void demo_DictReader()
 {
-    auto reader = miocsv::DictReader {"data/regular.csv"};
+    auto reader = miocsv::DictReader {"data/test.csv"};
 
     // the order of headers is preserved as the input file
     std::cout << "headers are: " << reader.get_fieldnames() << '\n';
@@ -79,7 +79,7 @@ void demo_DictReader()
 
 void demo_MIOReader()
 {
-    auto mioreader = miocsv::MIOReader {"data/regular.csv"};
+    auto mioreader = miocsv::MIOReader {"data/test.csv"};
 
     for (const auto& line: mioreader)
     {
@@ -94,7 +94,7 @@ void demo_MIOReader()
 
 void demo_MIODictReader()
 {
-    auto mioreader = miocsv::MIODictReader {"data/regular.csv"};
+    auto mioreader = miocsv::MIODictReader {"data/test.csv"};
 
     std::cout << "headers are: " << mioreader.get_fieldnames() << '\n';
 

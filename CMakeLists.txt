@@ -1,4 +1,3 @@
-# FetchContent_Declare requires 3.14 or higher
 cmake_minimum_required (VERSION 3.14)
 
 project ("miocsv")
