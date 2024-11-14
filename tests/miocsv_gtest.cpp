@@ -11,7 +11,7 @@
  * @brief TO DO : test writer
  */
 
-namespace test_miocsv
+namespace
 {
 const std::vector<std::string> PARSED_HEADERS {
     "name",
@@ -349,4 +349,4 @@ TEST(MIOCSVTest, ParseThroughIllFormedFile)
     ASSERT_NO_THROW(parse_through_MIODictReader(ILLFORMED_FILE));
 }
 
-} // namespace test_miocsv
+} // namespace

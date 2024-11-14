@@ -30,7 +30,7 @@ public:
     {
         if (!ms.is_mapped())
         {
-            std::cerr << "invalid input!\n";
+            std::cerr << ms_ << "is not successfully mapped!\n";
             std::terminate();
         }
 
@@ -42,7 +42,7 @@ public:
     {
         if (!ms.is_mapped())
         {
-            std::cerr << "invalid input!\n";
+            std::cerr << ms_ << "is not successfully mapped!\n";
             std::terminate();
         }
 

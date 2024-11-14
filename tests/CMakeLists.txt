@@ -1,6 +1,6 @@
 project(test_miocsv)
 
-add_executable(${PROJECT_NAME} test_miocsv.cpp)
+add_executable(${PROJECT_NAME} miocsv_gtest.cpp)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE GTest::gtest_main)
 target_compile_definitions(${PROJECT_NAME} PRIVATE TEST_FILE="${DATA_DIR}/test.csv")
