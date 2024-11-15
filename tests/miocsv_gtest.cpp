@@ -175,16 +175,15 @@ void validate_parsed_content(miocsv::BaseReader* p)
 
 void validate_parsed_content(miocsv::BaseDictReader* p)
 {
-    auto& reader = *p;
-
-    std::stringstream ss;
-    ss << reader.get_fieldnames();
-
     static const std::string RAW_HEADERS =
         "name,link_id,from_node_id,to_node_id,facility_type,dir_flag,length,lanes,capacity,free_"
         "speed,link_type,cost,VDF_fftt1,VDF_cap1,VDF_alpha1,VDF_beta1,VDF_theta1,VDF_gamma1,VDF_"
         "mu1,RUC_rho1,RUC_resource1,RUC_type";
 
+    auto& reader = *p;
+    std::stringstream ss;
+
+    ss << reader.get_fieldnames();
     ASSERT_EQ(ss.str(), RAW_HEADERS);
 
     for (const auto& line: reader)

@@ -13,7 +13,7 @@ from time import sleep, time
 def test_reader():
     ts = time()
 
-    with open('data/csvreader.csv', 'r') as f:
+    with open('data/benchmark.csv', 'r') as f:
         reader = csv.reader(f)
 
         for line in reader:
@@ -30,7 +30,7 @@ def test_dictreader():
 
     ts = time()
 
-    with open('data/csvreader.csv', 'r') as f:
+    with open('data/benchmark.csv', 'r') as f:
         reader = csv.DictReader(f)
 
         for line in reader:

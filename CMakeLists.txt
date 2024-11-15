@@ -32,6 +32,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(googletest benchmark)
 
 include_directories(include)
+add_subdirectory(examples)
 
 option(ENABLE_TESTING "Enable testing" ON)
 if (ENABLE_TESTING)

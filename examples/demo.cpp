@@ -10,21 +10,54 @@
 #include <stdcsv.h>
 #include <miocsv.h>
 
+#include <algorithm>
 #include <iostream>
 
-enum DemoCases {std_reader, std_dictreader, mio_reader, mio_dictreader, writer};
+enum DemoCase {Reader, DictReader, MIOReader, MIODictReader, Writer};
+
+DemoCase get_demo_case(const char* arg)
+{
+    using namespace std::string_literals;
+
+    if (!std::strlen(arg))
+        return Reader;
+
+    std::string s {arg};
+    std::transform(s.cbegin(), s.cend(), s.begin(), [](unsigned char c) { return std::tolower(c); });
+
+    if (s == "reader"s)
+        return Reader;
+    else if (s == "dictreader"s)
+        return DictReader;
+    else if (s == "mioreader"s)
+        return MIOReader;
+    else if (s == "miodictreader"s)
+        return MIODictReader;
+    else if (s == "writer"s)
+        return Writer;
+    else
+        return Reader;
+}
 
 void demo_Reader();
 void demo_DictReader();
 void demo_MIOReader();
 void demo_MIODictReader();
 void demo_Writer();
-void demo(DemoCases& tc);
+void demo(DemoCase& tc);
 
-int main()
+int main(int argc, char* argv[])
 {
-    DemoCases tc {std_reader};
-    demo(tc);
+    if (argc == 0)
+    {
+        DemoCase tc {Reader};
+        demo(tc);
+    }
+    else
+    {
+        DemoCase tc = get_demo_case(argv[0]);
+        demo(tc);
+    }
 
     std::cout << "demo done!\n";
 
@@ -33,7 +66,7 @@ int main()
 
 void demo_Reader()
 {
-    auto reader = miocsv::Reader {"data/test.csv"};
+    auto reader = miocsv::Reader {INPUT_FILE};
 
     // use range-for loop to print out the first 10 lines
     for (const auto& line: reader)
@@ -52,7 +85,7 @@ void demo_Reader()
 
 void demo_DictReader()
 {
-    auto reader = miocsv::DictReader {"data/test.csv"};
+    auto reader = miocsv::DictReader {INPUT_FILE};
 
     // the order of headers is preserved as the input file
     std::cout << "headers are: " << reader.get_fieldnames() << '\n';
@@ -79,11 +112,11 @@ void demo_DictReader()
 
 void demo_MIOReader()
 {
-    auto mioreader = miocsv::MIOReader {"data/test.csv"};
+    auto reader = miocsv::MIOReader {INPUT_FILE};
 
-    for (const auto& line: mioreader)
+    for (const auto& line: reader)
     {
-        auto row_num = mioreader.get_row_num();
+        auto row_num = reader.get_row_num();
         std::cout << "line " << row_num  << ": " << line << '\n';
 
         // similar to Reader, you can retrieve a record using index
@@ -94,13 +127,13 @@ void demo_MIOReader()
 
 void demo_MIODictReader()
 {
-    auto mioreader = miocsv::MIODictReader {"data/test.csv"};
+    auto reader = miocsv::MIODictReader {INPUT_FILE};
 
-    std::cout << "headers are: " << mioreader.get_fieldnames() << '\n';
+    std::cout << "headers are: " << reader.get_fieldnames() << '\n';
 
-    for (const auto& line: mioreader)
+    for (const auto& line: reader)
     {
-        auto row_num = mioreader.get_row_num();
+        auto row_num = reader.get_row_num();
         std::cout << "line " << row_num  << ": " << line << '\n';
 
         // similar to DictReader, you can retrieve a record using either index or header
@@ -128,27 +161,27 @@ void demo_Writer()
     writer.write_row({"2nd way to write a record", "string", 2, 2.0});
 }
 
-void demo(DemoCases& tc)
+void demo(DemoCase& tc)
 {
     switch (tc)
     {
-    case std_reader:
+    case Reader:
         demo_Reader();
         break;
 
-    case std_dictreader:
+    case DictReader:
         demo_DictReader();
         break;
 
-    case mio_reader:
+    case MIOReader:
         demo_MIOReader();
         break;
 
-    case mio_dictreader:
+    case MIODictReader:
         demo_MIODictReader();
         break;
 
-    case writer:
+    case Writer:
         demo_Writer();
         break;
 
