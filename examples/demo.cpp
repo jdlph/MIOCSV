@@ -11,6 +11,7 @@
 #include <miocsv.h>
 
 #include <algorithm>
+#include <cstring>
 #include <iostream>
 
 enum DemoCase {Reader, DictReader, MIOReader, MIODictReader, Writer};
@@ -147,7 +148,7 @@ void demo_Writer()
     writer.write_row({"2nd way to write a record", "string", 2, 2.0});
 }
 
-void demo(DemoCase& tc)
+void demo(const DemoCase& tc)
 {
     switch (tc)
     {
