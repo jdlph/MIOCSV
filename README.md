@@ -303,7 +303,7 @@ Even _**O(N)**_ is the best time bound over all possible CSV parser implementati
 ## Acknowledgement
 This project is inspired by two existing works from the community.
 * [mio::StringReader.getline()](https://github.com/wxinix/wxlib/blob/master/mio/stringreader.hpp). Thanks to [Dr. Wuping Xin](https://github.com/wxinix) for making this master piece!
-* The parsing algorithm from [CSVparser](https://github.com/rsylvian/CSVparser)[^5]. Thanks to its [Romain Sylvian](https://github.com/rsylvian) for this elegant procedure!
+* The parsing algorithm from [CSVparser](https://github.com/rsylvian/CSVparser)[^5]. Thanks to [Romain Sylvian](https://github.com/rsylvian) for this elegant procedure!
 
 Besides, we would like to thank Dr. Wuping Xin for his valuable suggestions and comments towards this project, which lead to improvement in both its appearance and performance.
 

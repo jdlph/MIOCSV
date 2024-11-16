@@ -15,59 +15,31 @@
 
 enum DemoCase {Reader, DictReader, MIOReader, MIODictReader, Writer};
 
-DemoCase get_demo_case(const char* arg)
+DemoCase get_demo_case(int argc, char* arg)
 {
-    using namespace std::string_literals;
-
-    if (!std::strlen(arg))
+    if (argc == 1 || !std::strlen(arg))
         return Reader;
 
-    std::string s {arg};
-    std::transform(s.cbegin(), s.cend(), s.begin(), [](unsigned char c) { return std::tolower(c); });
+    // to lower case
+    std::transform(arg, arg + std::strlen(arg), arg, [](unsigned char c) { return std::tolower(c); });
 
-    if (s == "reader"s)
-        return Reader;
-    else if (s == "dictreader"s)
+    if (!std::strcmp(arg, "dictreader"))
         return DictReader;
-    else if (s == "mioreader"s)
+    else if (!std::strcmp(arg, "mioreader"))
         return MIOReader;
-    else if (s == "miodictreader"s)
+    else if (!std::strcmp(arg, "miodictreader"))
         return MIODictReader;
-    else if (s == "writer"s)
+    else if (!std::strcmp(arg, "writer"))
         return Writer;
     else
         return Reader;
 }
 
-void demo_Reader();
-void demo_DictReader();
-void demo_MIOReader();
-void demo_MIODictReader();
-void demo_Writer();
-void demo(DemoCase& tc);
-
-int main(int argc, char* argv[])
-{
-    if (argc == 0)
-    {
-        DemoCase tc {Reader};
-        demo(tc);
-    }
-    else
-    {
-        DemoCase tc = get_demo_case(argv[0]);
-        demo(tc);
-    }
-
-    std::cout << "demo done!\n";
-
-    return 0;
-}
-
 void demo_Reader()
 {
-    auto reader = miocsv::Reader {INPUT_FILE};
+    std::cout << "Demo miocsv::Reader\n\n";
 
+    auto reader = miocsv::Reader {INPUT_FILE};
     // use range-for loop to print out the first 10 lines
     for (const auto& line: reader)
     {
@@ -78,17 +50,19 @@ void demo_Reader()
         // std::cout << "1st record: " << line[0] << "; "
         //           << "2nd record: " << line[1] << '\n';
 
-        // if (row_num > 10)
-        //     break;
+        if (row_num >= 10)
+            break;
     }
 }
 
 void demo_DictReader()
 {
+    std::cout << "Demo miocsv::DictReader\n\n";
+
     auto reader = miocsv::DictReader {INPUT_FILE};
 
     // the order of headers is preserved as the input file
-    std::cout << "headers are: " << reader.get_fieldnames() << '\n';
+    std::cout << "headers are: " << reader.get_fieldnames() << "\n\n";
 
     // use range-for loop to print out the first 10 lines
     for (const auto& line: reader)
@@ -98,20 +72,22 @@ void demo_DictReader()
 
         // for DictReader, we offer two ways to retrieve a record
         // 1st way, via index
-        std::cout << "2nd record: " << line[1] << "; "
+        std::cout << "\t2nd record: " << line[1] << "; "
                   << "3rd record: " << line[2] << '\n';
 
         // 2nd way, via header
-        std::cout << "link_id: " << line["link_id"] << "; "
+        std::cout << "\tlink_id: " << line["link_id"] << "; "
                   << "facility_type: " << line["facility_type"] << '\n';
 
-        if (row_num > 10)
+        if (row_num >= 10)
             break;
     }
 }
 
 void demo_MIOReader()
 {
+    std::cout << "Demo miocsv::MIOReader\n\n";
+
     auto reader = miocsv::MIOReader {INPUT_FILE};
 
     for (const auto& line: reader)
@@ -120,16 +96,21 @@ void demo_MIOReader()
         std::cout << "line " << row_num  << ": " << line << '\n';
 
         // similar to Reader, you can retrieve a record using index
-        std::cout << "1st record: " << line[0] << "; "
+        std::cout << "\t1st record: " << line[0] << "; "
                   << "2nd record: " << line[1] << '\n';
+
+        if (row_num >= 10)
+            break;
     }
 }
 
 void demo_MIODictReader()
 {
+    std::cout << "Demo miocsv::MIODictReader\n\n";
+
     auto reader = miocsv::MIODictReader {INPUT_FILE};
 
-    std::cout << "headers are: " << reader.get_fieldnames() << '\n';
+    std::cout << "headers are: " << reader.get_fieldnames() << "\n\n";
 
     for (const auto& line: reader)
     {
@@ -138,17 +119,22 @@ void demo_MIODictReader()
 
         // similar to DictReader, you can retrieve a record using either index or header
         // via index
-        std::cout << "2nd record: " << line[1] << "; "
+        std::cout << "\t2nd record: " << line[1] << "; "
                   << "3rd record: " << line[2] << '\n';
 
         // via header
-        std::cout << "link_id: " << line["link_id"] << "; "
+        std::cout << "\tlink_id: " << line["link_id"] << "; "
                   << "facility_type: " << line["facility_type"] << '\n';
+
+        if (row_num >= 10)
+            break;
     }
 }
 
 void demo_Writer()
 {
+    std::cout << "Demo miocsv::Writer\n";
+
     auto writer = miocsv::Writer {"output.csv"};
 
     // there are two ways to construct a line
@@ -188,4 +174,14 @@ void demo(DemoCase& tc)
     default:
         break;
     }
+}
+
+int main(int argc, char* argv[])
+{
+    DemoCase tc = get_demo_case(argc, argv[1]);
+    demo(tc);
+
+    std::cout << "\ndemo done!\n";
+
+    return 0;
 }
