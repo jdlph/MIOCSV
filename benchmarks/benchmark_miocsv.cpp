@@ -1,9 +1,9 @@
 /**
- * @file benchmark.cpp, part of the project MIOCSV under Apache License 2.0
+ * @file benchmark_miocsv.cpp, part of the project MIOCSV under Apache License 2.0
  * @author jdlph (jdlph@hotmail.com)
- * @brief Benchmark the readers from project MIOCSV and std::getline() 
+ * @brief Benchmark the four readers from project MIOCSV and std::getline()
  *
- * @copyright Copyright (c) 2024 - Present Peiheng Li, Ph.D.
+ * @copyright Copyright (c) 2024 Peiheng Li, Ph.D.
  *
  */
 

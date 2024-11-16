@@ -1,5 +1,5 @@
 """
- * @file test.py, part of the project MIOCSV under Apache License 2.0
+ * @file benchmark_csvreader.py, part of the project MIOCSV under Apache License 2.0
  * @author jdlph (jdlph@hotmail.com)
  * @brief Benchmark reader and DictReader from the Python csv module
  *

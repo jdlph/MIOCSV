@@ -3,7 +3,7 @@
  * @author jdlph (jdlph@hotmail.com)
  * @brief A suite of lightening-fast CSV parsers built upon memory mapping (MIO)
  *
- * @copyright Copyright (c) 2022 - 2023 Peiheng Li, Ph.D.
+ * @copyright Copyright (c) 2022 - 2024 Peiheng Li, Ph.D.
  *
  */
 

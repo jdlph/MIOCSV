@@ -1,3 +1,12 @@
+/**
+ * @file miocsv_gtest.cpp, part of the project MIOCSV under Apache License 2.0
+ * @author jdlph (jdlph@hotmail.com)
+ * @brief Test all the four readers from this project using GoogleTest
+ *
+ * @copyright Copyright (c) 2024 Peiheng Li, Ph.D.
+ *
+ */
+
 #include <stdcsv.h>
 #include <miocsv.h>
 

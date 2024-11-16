@@ -3,7 +3,7 @@
  * @author jdlph (jdlph@hotmail.com)
  * @brief A suite of lightening-fast CSV parsers and writer built upon the C++ std facilities
  *
- * @copyright Copyright (c) 2022 - 2023 Peiheng Li, Ph.D.
+ * @copyright Copyright (c) 2022 - 2024 Peiheng Li, Ph.D.
  */
 
 #ifndef GUARD_STDCSV_H
