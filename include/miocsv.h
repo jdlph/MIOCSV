@@ -124,7 +124,7 @@ Row MIOReader::parse()
         {
             sr.extend(++it);
             quoted ^= true;
-            if (!quoted && *it != quote && *it != delim && *it != LF)
+            if (!quoted && *it != quote && *it != delim && *it != CR && *it != LF)
             {
                 ++it = std::find(it, ms.end(), LF);
                 throw Reader::InvalidRow{row_num, sr.to_string()};

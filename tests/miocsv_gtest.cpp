@@ -292,7 +292,7 @@ bool sniff_cr(const std::string& filename)
 {
     static constexpr char CR = '\r';
 
-    std::ifstream ist {filename};
+    std::ifstream ist {filename, std::ios::binary};
     if (!ist)
     {
         std::cerr << "invalid input! no " << filename << '\n';
