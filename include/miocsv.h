@@ -72,7 +72,6 @@ protected:
         catch (const InvalidRow& e)
         {
             std::cerr << e.what() << '\n';
-            MIOReader::iterate();
         }
 
         ++row_num;
@@ -126,7 +125,11 @@ Row MIOReader::parse()
             quoted ^= true;
             if (!quoted && *it != quote && *it != delim && *it != CR && *it != LF)
             {
-                ++it = std::find(it, ms.end(), LF);
+                it = std::find(it, ms.end(), LF);
+                // "it" may have reached EOL
+                if (it++ == ms.end())
+                    return r;
+
                 throw Reader::InvalidRow{row_num, sr.to_string()};
             }
         }

@@ -508,9 +508,6 @@ protected:
         catch (const InvalidRow& e)
         {
             std::cerr << e.what() << '\n';
-            // this is necessary. otherwise, DictReader::iterate() will be called
-            // if DictReader is being used.
-            Reader::iterate();
         }
 
         ++row_num;
@@ -880,7 +877,7 @@ Row Reader::split2(const C& c) const
         {
             sr.extend(++i);
             quoted ^= true;
-            if (!quoted && *i != quote && *i != delim && i != e)
+            if (!quoted && *i != quote && *i != delim && *it != CR && i != e)
             {
                 throw InvalidRow{row_num, sr.to_string()};
             }
@@ -919,7 +916,7 @@ Row Reader::split3()
         {
             s.push_back(*it++);
             quoted ^= true;
-            if (!quoted && *it != quote && *it != delim && *it != LF)
+            if (!quoted && *it != quote && *it != delim && *it != CR && *it != LF)
             {
                 ++it = std::find(it, it_end, LF);
                 throw Reader::InvalidRow{row_num, s};
