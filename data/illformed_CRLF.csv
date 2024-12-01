@@ -1,0 +1,11 @@
+1,2,3
+1,2
+"string"
+"string","string"
+"string with delimiter ',' inside",1,2,"string"
+"string with delimiter "double, quote" inside","","test",1,
+"string with delimiter ""double, quote"" inside"
+
+
+
+1,2,3,4

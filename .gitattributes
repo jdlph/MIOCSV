@@ -1,0 +1,7 @@
+# configurations on handling line endings across platforms
+* text=auto
+
+data/illformed.csv text eol=lf
+data/illformed_CRLF.csv text eol=crlf
+data/test.csv text eol=lf
+data/test_CRLF.csv text eol=crlf
