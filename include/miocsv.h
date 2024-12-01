@@ -65,15 +65,7 @@ protected:
         if (it == ms.end())
             throw IterationEnd{};
 
-        try
-        {
-            row = parse();
-        }
-        catch (const InvalidRow& e)
-        {
-            std::cerr << e.what() << '\n';
-        }
-
+        row = parse();
         ++row_num;
     }
 
@@ -123,15 +115,19 @@ Row MIOReader::parse()
         {
             sr.extend(++it);
             quoted ^= true;
+#ifdef FORMAT_CHECKER
             if (!quoted && *it != quote && *it != delim && *it != CR && *it != LF)
             {
+                std::cerr << "CAUTION: Invalid Row at line " << row_num + 1
+                          << "! Value is not allowed after quoted field: "
+                          << sr.to_string() << '\n';
+
                 it = std::find(it, ms.end(), LF);
-                // "it" may have reached EOL
+                // "it" may have reached EOF
                 if (it++ == ms.end())
                     return r;
-
-                throw Reader::InvalidRow{row_num, sr.to_string()};
             }
+#endif
         }
         else if (*it == delim && !quoted)
         {

@@ -10,6 +10,7 @@
 #define GUARD_STDCSV_H
 
 #define O3N_TIME_BOUND
+#define FORMAT_CHECKER
 
 #include <algorithm>
 #include <fstream>
@@ -335,6 +336,12 @@ protected:
     const char CR = '\r';
     const char LF = '\n';
 
+    /**
+     * @brief deprecated by promoting direct warning message since 12/01/24.
+     *
+     * @note see Reader::split(), Reader::split2(), Reader::split3(), and MIOReader::parse() for
+     *       details.
+     */
     struct InvalidRow : public std::runtime_error {
         // do we need it?
         InvalidRow() = delete;
@@ -497,18 +504,11 @@ protected:
             throw IterationEnd{};
 #endif
 
-        try
-        {
 #ifdef O3N_TIME_BOUND
-            row = split3();
+        row = split3();
 #else
-            row = split2(s);
+        row = split2(s);
 #endif
-        }
-        catch (const InvalidRow& e)
-        {
-            std::cerr << e.what() << '\n';
-        }
 
         ++row_num;
     }
@@ -826,8 +826,14 @@ Row Reader::split(const std::string& s) const
             {
                 s1 += std::string(b, i + 1);
                 b = i + 1;
-                if (*b != quote && *b != delim && b != e)
-                    throw InvalidRow{row_num, s1};
+#ifdef FORMAT_CHECKER
+                if (*b != quote && *b != delim && *b != CR && b != e)
+                {
+                    std::cerr << "CAUTION: Invalid Row at line " << row_num + 1
+                              << "! Value is not allowed after quoted field: "
+                              << s1 << '\n';
+                }
+#endif
             }
         }
         else if (*i == delim && !quoted)
@@ -877,10 +883,14 @@ Row Reader::split2(const C& c) const
         {
             sr.extend(++i);
             quoted ^= true;
+#ifdef FORMAT_CHECKER
             if (!quoted && *i != quote && *i != delim && *it != CR && i != e)
             {
-                throw InvalidRow{row_num, sr.to_string()};
+                std::cerr << "CAUTION: Invalid Row at line " << row_num + 1
+                          << "! Value is not allowed after quoted field: "
+                          << sr.to_string() << '\n';
             }
+#endif
         }
         else if (*i == delim && !quoted)
         {
@@ -916,11 +926,17 @@ Row Reader::split3()
         {
             s.push_back(*it++);
             quoted ^= true;
+#ifdef FORMAT_CHECKER
             if (!quoted && *it != quote && *it != delim && *it != CR && *it != LF)
             {
+                std::cerr << "CAUTION: Invalid Row at line " << row_num + 1
+                          << "! Value is not allowed after quoted field: "
+                          << s << '\n';
+
+                // shall I adopt the same implementation from parse()?
                 ++it = std::find(it, it_end, LF);
-                throw Reader::InvalidRow{row_num, s};
             }
+#endif
         }
         else if (*it == delim && !quoted)
         {
