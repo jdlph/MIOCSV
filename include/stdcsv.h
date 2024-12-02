@@ -9,8 +9,41 @@
 #ifndef GUARD_STDCSV_H
 #define GUARD_STDCSV_H
 
+/**
+ * @brief control the time bound of parsers
+ *
+ * @details defining O3N_TIME_BOUND will invoke an O(3N) parsing function (i.e., Reader::split3()).
+ *          otherwise, an O(5N) implementation (i.e., Reader::split2()) will be in place.
+ *
+ * @remark  it does not apply to MIOReader and MIODictReader as they only have one parsing function,
+ *          which is MIOReader::parse() bounded by O(3N).
+ */
 #define O3N_TIME_BOUND
+
+/**
+ * @brief check invalid csv format and print out warnings
+ *
+ * @details defining FORMAT_CHECKER will make the parsing function check the csv format and invoke
+ *          warnings. otherwise, a row is parsed as is. no warnings will be printed.
+ *
+ * @remark disabling FORMAT_CHECKER will result in the same parsing behaviors as Python csv.reader().
+ */
 #define FORMAT_CHECKER
+
+/**
+ * @brief further control how to treat invalid fields of a row
+ *
+ * @details if it is defined along with FORMAT_CHECKER, the parsing function will only keep the
+ *          valid fields and discard any invalid fields. A warning, "Invalid fields are discarded!",
+ *          will be printed. otherwise, a row is parsed as is without the above warning.
+ *
+ * @remark it only works when both O3N_TIME_BOUND and FORMAT_CHECKER are defined.
+ *         it does not apply to an O(5N) parsing function.
+ *
+ * @remark it might be deprecated in the future as it introduces complexity and inconsistency among
+ *         parsing functions.
+ */
+#define CUT_BAD_FIELDS
 
 #include <algorithm>
 #include <fstream>
@@ -337,9 +370,13 @@ protected:
     const char LF = '\n';
 
     /**
-     * @brief deprecated by promoting direct warning message since 12/01/24.
+     * @deprecated
      *
-     * @note see Reader::split(), Reader::split2(), Reader::split3(), and MIOReader::parse() for
+     * @note promote direct warning message (since 12/01/24) (rather than throwing, catching, and
+     *       printing out the exception message) simplies the implementation and improves the
+     *       performance.
+     *
+     *       see Reader::split(), Reader::split2(), Reader::split3(), and MIOReader::parse() for
      *       details.
      */
     struct InvalidRow : public std::runtime_error {
@@ -831,7 +868,7 @@ Row Reader::split(const std::string& s) const
                 {
                     std::cerr << "CAUTION: Invalid Row at line " << row_num + 1
                               << "! Value is not allowed after quoted field: "
-                              << s1 << '\n';
+                              << s1 << ".\n";
                 }
 #endif
             }
@@ -888,7 +925,7 @@ Row Reader::split2(const C& c) const
             {
                 std::cerr << "CAUTION: Invalid Row at line " << row_num + 1
                           << "! Value is not allowed after quoted field: "
-                          << sr.to_string() << '\n';
+                          << sr.to_string() << ".\n";
             }
 #endif
         }
@@ -931,12 +968,14 @@ Row Reader::split3()
             {
                 std::cerr << "CAUTION: Invalid Row at line " << row_num + 1
                           << "! Value is not allowed after quoted field: "
-                          << s << '\n';
-
+                          << s << ".\n";
+#ifdef CUT_BAD_FIELDS
+                std::cerr << "\t Invalid fields are discarded!\n";
                 // shall I adopt the same implementation from parse()?
-                ++it = std::find(it, it_end, LF);
+                it = std::find(it, it_end, LF);
+#endif  // CUT_BAD_FIELDS
             }
-#endif
+#endif  // FORMAT_CHECKER
         }
         else if (*it == delim && !quoted)
         {

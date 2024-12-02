@@ -120,14 +120,16 @@ Row MIOReader::parse()
             {
                 std::cerr << "CAUTION: Invalid Row at line " << row_num + 1
                           << "! Value is not allowed after quoted field: "
-                          << sr.to_string() << '\n';
-
+                          << sr.to_string() << ".\n";
+#ifdef CUT_BAD_FIELDS
+                std::cerr << "\t Invalid fields are discarded!\n";
                 it = std::find(it, ms.end(), LF);
                 // "it" may have reached EOF
-                if (it++ == ms.end())
+                if (it == ms.end())
                     return r;
+#endif  // CUT_BAD_FIELDS
             }
-#endif
+#endif  // FORMAT_CHECKER
         }
         else if (*it == delim && !quoted)
         {
