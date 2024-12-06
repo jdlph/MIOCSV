@@ -123,10 +123,8 @@ Row MIOReader::parse()
                           << sr.to_string() << ".\n";
 #ifdef CUT_BAD_FIELDS
                 std::cerr << "\t Invalid fields are discarded!\n";
-                it = std::find(it, ms.end(), LF);
                 // "it" may have reached EOF
-                if (it == ms.end())
-                    return r;
+                it = std::find(it, ms.end(), LF);
 #endif  // CUT_BAD_FIELDS
             }
 #endif  // FORMAT_CHECKER
@@ -147,7 +145,7 @@ Row MIOReader::parse()
             ++it;
             return r;
         }
-        else if (semi_branch_expect((it == ms.end()), true))
+        else if (semi_branch_expect(it == ms.end(), true))
             return r;
         else
             sr.extend(++it);

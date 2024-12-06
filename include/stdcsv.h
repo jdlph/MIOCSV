@@ -535,18 +535,15 @@ protected:
 #ifdef O3N_TIME_BOUND
         if (it == it_end)
             throw IterationEnd{};
+
+        row = split3();
 #else
         std::string s;
         if (!std::getline(ist, s))
             throw IterationEnd{};
-#endif
 
-#ifdef O3N_TIME_BOUND
-        row = split3();
-#else
         row = split2(s);
 #endif
-
         ++row_num;
     }
 
@@ -971,7 +968,7 @@ Row Reader::split3()
                           << s << ".\n";
 #ifdef CUT_BAD_FIELDS
                 std::cerr << "\t Invalid fields are discarded!\n";
-                // shall I adopt the same implementation from parse()?
+                // "it" may have reached EOF
                 it = std::find(it, it_end, LF);
 #endif  // CUT_BAD_FIELDS
             }

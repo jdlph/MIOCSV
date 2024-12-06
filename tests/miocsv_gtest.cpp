@@ -319,11 +319,11 @@ class EOLTest : public testing::TestWithParam<EOLCase> {
 
 };
 
-// TEST_FILE (test.csv) is '\n' terminated while TEST_FILE_CRLF(test_CRLF) is '\r\n' terminated
+// TEST_FILE (test.csv) is '\n' terminated while TEST_CRLF_FILE(test_CRLF) is '\r\n' terminated
 INSTANTIATE_TEST_SUITE_P(
     MIOCSVTest,
     EOLTest,
-    testing::Values(EOLCase{TEST_FILE}, EOLCase{TEST_FILE_CRLF})
+    testing::Values(EOLCase{TEST_FILE}, EOLCase{TEST_CRLF_FILE})
 );
 
 TEST_P(EOLTest, AllReadersRunSeamlessly)
@@ -335,7 +335,7 @@ TEST_P(EOLTest, AllReadersRunSeamlessly)
 TEST(MIOCSVTest, SniffEOL)
 {
     ASSERT_FALSE(sniff_cr(TEST_FILE));
-    ASSERT_TRUE(sniff_cr(TEST_FILE_CRLF));
+    ASSERT_TRUE(sniff_cr(TEST_CRLF_FILE));
 }
 
 TEST(MIOCSVTest, FileNotFound)
@@ -355,6 +355,24 @@ TEST(MIOCSVTest, ParseThroughIllFormedFile)
     ASSERT_NO_THROW(parse_through_DictReader(ILLFORMED_FILE));
     ASSERT_NO_THROW(parse_through_MIOReader(ILLFORMED_FILE));
     ASSERT_NO_THROW(parse_through_MIODictReader(ILLFORMED_FILE));
+
+    ASSERT_NO_THROW(parse_through_Reader(ILLFORMED_CRLF_FILE));
+    ASSERT_NO_THROW(parse_through_DictReader(ILLFORMED_CRLF_FILE));
+    ASSERT_NO_THROW(parse_through_MIOReader(ILLFORMED_CRLF_FILE));
+    ASSERT_NO_THROW(parse_through_MIODictReader(ILLFORMED_CRLF_FILE));
+}
+
+TEST(MIOCSVTest, ParseThroughBenchmarkFile)
+{
+    ASSERT_NO_THROW(parse_through_Reader(BENCHMARK_FILE));
+    ASSERT_NO_THROW(parse_through_DictReader(BENCHMARK_FILE));
+    ASSERT_NO_THROW(parse_through_MIOReader(BENCHMARK_FILE));
+    ASSERT_NO_THROW(parse_through_MIODictReader(BENCHMARK_FILE));
+
+    ASSERT_NO_THROW(parse_through_Reader(BENCHMARK_CRLF_FILE));
+    ASSERT_NO_THROW(parse_through_DictReader(BENCHMARK_CRLF_FILE));
+    ASSERT_NO_THROW(parse_through_MIOReader(BENCHMARK_CRLF_FILE));
+    ASSERT_NO_THROW(parse_through_MIODictReader(BENCHMARK_CRLF_FILE));
 }
 
 } // namespace
