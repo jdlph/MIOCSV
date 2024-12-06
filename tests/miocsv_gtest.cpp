@@ -355,7 +355,10 @@ TEST(MIOCSVTest, ParseThroughIllFormedFile)
     ASSERT_NO_THROW(parse_through_DictReader(ILLFORMED_FILE));
     ASSERT_NO_THROW(parse_through_MIOReader(ILLFORMED_FILE));
     ASSERT_NO_THROW(parse_through_MIODictReader(ILLFORMED_FILE));
+}
 
+TEST(MIOCSVTest, ParseThroughIllFormedCRLFFile)
+{
     ASSERT_NO_THROW(parse_through_Reader(ILLFORMED_CRLF_FILE));
     ASSERT_NO_THROW(parse_through_DictReader(ILLFORMED_CRLF_FILE));
     ASSERT_NO_THROW(parse_through_MIOReader(ILLFORMED_CRLF_FILE));
@@ -368,7 +371,10 @@ TEST(MIOCSVTest, ParseThroughBenchmarkFile)
     ASSERT_NO_THROW(parse_through_DictReader(BENCHMARK_FILE));
     ASSERT_NO_THROW(parse_through_MIOReader(BENCHMARK_FILE));
     ASSERT_NO_THROW(parse_through_MIODictReader(BENCHMARK_FILE));
+}
 
+TEST(MIOCSVTest, ParseThroughBenchmarkCRLFFile)
+{
     ASSERT_NO_THROW(parse_through_Reader(BENCHMARK_CRLF_FILE));
     ASSERT_NO_THROW(parse_through_DictReader(BENCHMARK_CRLF_FILE));
     ASSERT_NO_THROW(parse_through_MIOReader(BENCHMARK_CRLF_FILE));

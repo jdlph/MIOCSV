@@ -43,7 +43,7 @@
  * @remark it might be deprecated in the future as it introduces complexity and inconsistency among
  *         parsing functions.
  */
-#define CUT_BAD_FIELDS
+// #define CUT_BAD_FIELDS
 
 #include <algorithm>
 #include <fstream>
